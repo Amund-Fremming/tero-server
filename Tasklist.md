@@ -4,7 +4,7 @@
 
 **Setup**
 - [x] Init github
-- [ ] Update the old repos readme: - rewrite in rust
+- [x] Update the old repos readme: - rewrite in rust
 - [x] Setup dev env with docker compose
 - [x] Setup basic api for health and health detailed
 - [x] Setup tracing
