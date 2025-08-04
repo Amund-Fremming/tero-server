@@ -3,8 +3,8 @@
     "1": {
       "Name": "Dev database",
       "Group": "Servers",
-      "Host": "db",
-      "Port": 4000,
+      "Host": "terodb",
+      "Port": 5432,
       "MaintenanceDB": "postgres",
       "Username": "postgres",
       "SSLMode": "prefer"

@@ -20,13 +20,13 @@ services:
     container_name: tero-pgadmin
     restart: unless-stopped
     ports:
-      - "5000:80"
+      - "5050:80"
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@tero.com
       PGADMIN_DEFAULT_PASSWORD: password
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      - ./pgadmin/pgadmin-servers.json:/pgadmin4/servers.json
+      - ./pgadmin-servers.json:/pgadmin4/servers.json
     networks:
       - tero-network
     depends_on:
@@ -34,14 +34,15 @@ services:
 
   # Local database    
   terodb:
-    image: postgres:17
+    image: postgres:14
     container_name: terodb
     restart: unless-stopped
     ports:
-    - "4000:5432"
+    - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: postgres 
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: terodb
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
