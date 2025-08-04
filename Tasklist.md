@@ -8,21 +8,21 @@
 - [x] Setup dev env with docker compose
 - [x] Setup basic api for health and health detailed
 - [x] Setup tracing
-- [ ] Basic middleware request logger (may not need after some time, but good for debugging)
-- [ ] Setup runtimes and their tracing 
-- [ ] Map out all models
+- [x] Basic middleware request logger (may not need after some time, but good for debugging)
+- [ ] Setup runtimes and their tracing 
+- [-] Map out all models
 
 **State**
-- [ ] Implement state with pg pool
+- [x] Implement state with pg pool
 
 **Error**
-- [ ] Implement descriptive error handling with internal logging not visible to the outside
-- [ ] Implement IntoResponse for all errors for the ServerError
+- [x] Implement descriptive error handling with internal logging not visible to the outside
+- [x] Implement IntoResponse for all errors for the ServerError
 
 **User**
-- [ ] Add support for guest user and persistet user
+- [x] Add support for guest user and persistet user
 - [ ] Auth0 support for persistent user
-- [ ] Create middleware for injecting an extention for user
+- [x] Create middleware for injecting an extention for user
 - [ ] Post, patch, put, delete
 
 **Cache**
@@ -36,6 +36,11 @@
 **Games**
 - [ ] Implement core logic
 - [ ] Only save game to disk when game is finished
+
+**UniversalService**
+- [ ] Pagination support
+- [ ] Typed search for all games
+- [ ] Universal join game
 
 **Admin**
 - [ ] Endponints for user history, how many active last week, last month and today

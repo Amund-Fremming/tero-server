@@ -4,6 +4,8 @@ ALTER TABLE "spinner_player" DROP CONSTRAINT "spinner_player_fk";
 ALTER TABLE "round" DROP CONSTRAINT "spinner_round";
 ALTER TABLE "question" DROP CONSTRAINT "quiz_question";
 
+DROP INDEX IF EXISTS "idx_spinner_id";
+DROP INDEX IF EXISTS "idx_round_id";
 DROP INDEX IF EXISTS "idx_spinner_category";
 DROP INDEX IF EXISTS "idx_quiz_category";
 DROP INDEX IF EXISTS "idx_guest_user_id";

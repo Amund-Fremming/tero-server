@@ -2,20 +2,23 @@ use std::env;
 
 use axum::{Router, middleware::from_fn};
 use dotenv::dotenv;
-use tower::ServiceBuilder;
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::FmtSubscriber;
 
 use crate::{
-    auth::auth_routes, health::health_routes, quiz::quiz_routes, request_mv::request_mv,
-    spinner::spinner_routes, state::AppState,
+    auth::auth_routes,
+    health::health_routes,
+    mw::{request_mw, subject_mw},
+    quiz::quiz_routes,
+    state::AppState,
 };
 
 mod auth;
+mod common;
 mod error;
 mod health;
+mod mw;
 mod quiz;
-mod request_mv;
 mod spinner;
 mod state;
 mod ws;
@@ -43,9 +46,12 @@ async fn main() {
     let app = Router::new()
         .nest("/health", health_routes())
         .nest("/auth", auth_routes(state.clone()))
-        .nest("/quiz", quiz_routes(state.clone()))
-        .nest("/spinner", spinner_routes(state.clone()))
-        .layer(from_fn(request_mv));
+        .nest(
+            "/quiz",
+            quiz_routes(state.clone()).layer(from_fn(subject_mw)),
+        )
+        //.nest("/spinner", spinner_routes(state.clone()).layer(from_fn(subject_mw)))
+        .layer(from_fn(request_mw));
 
     // Initialize webserver
     let port = env::var("PORT").expect("PORT is missing as env variable");
