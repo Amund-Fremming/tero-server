@@ -18,13 +18,13 @@ CREATE TYPE game_category AS ENUM (
 
 CREATE TABLE "user" (
     "id" SERIAL PRIMARY KEY,
-    "guest_id" UUID,
+    "guest_id" UUID DEFAULT uuid_generate_v4(),
     "auth0_id" VARCHAR,
     "user_type" user_type NOT NULL DEFAULT 'guest',
     "last_active" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "name" VARCHAR(100),
     "email" VARCHAR(150),
-    "age" INTEGER
+    "age" TIMESTAMPTZ
 );
 
 CREATE TABLE "quiz" (

@@ -6,7 +6,7 @@ use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::FmtSubscriber;
 
 use crate::{
-    auth::auth_routes,
+    auth::{protected_auth_routes, public_auth_routes},
     health::health_routes,
     mw::{request_mw, subject_mw},
     quiz::quiz_routes,
@@ -43,14 +43,17 @@ async fn main() {
         .unwrap_or_else(|e| panic!("{}", e));
 
     // Initialize routes
-    let app = Router::new()
+    let public_routes = Router::new()
         .nest("/health", health_routes())
-        .nest("/auth", auth_routes(state.clone()))
-        .nest(
-            "/quiz",
-            quiz_routes(state.clone()).layer(from_fn(subject_mw)),
-        )
-        //.nest("/spinner", spinner_routes(state.clone()).layer(from_fn(subject_mw)))
+        .nest("/guest-user", public_auth_routes(state.clone()));
+
+    let protected_routes = Router::new()
+        .nest("/user", protected_auth_routes(state.clone()))
+        .layer(from_fn(subject_mw));
+
+    let app = Router::new()
+        .merge(protected_routes)
+        .merge(public_routes)
         .layer(from_fn(request_mw));
 
     // Initialize webserver

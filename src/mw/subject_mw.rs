@@ -5,6 +5,8 @@ use axum::{
     middleware::Next,
     response::Response,
 };
+use tracing::info;
+use uuid::Uuid;
 
 use crate::{auth::Subject, error::ServerError};
 
@@ -33,15 +35,20 @@ pub async fn subject_mw(mut req: Request<Body>, next: Next) -> Result<Response, 
     if auth_header.is_some() && auth_header.unwrap().starts_with("Bearer ") {
         // validate token
         // Get user id
-        req.extensions_mut().insert(Subject::PersistentUser(1));
+        let id = "some-auth0-id".to_string();
+        let subject = Subject::RegisteredUser(id);
+        info!("Request by subject: {:?}", &subject);
+        req.extensions_mut().insert(subject);
     }
 
     if guest_header.is_some() {
-        let id: i32 = guest_header.unwrap().parse().map_err(|_| {
+        let id: Uuid = guest_header.unwrap().parse().map_err(|_| {
             ServerError::Api(StatusCode::BAD_REQUEST, "Failed to parse header".into())
         })?;
 
-        req.extensions_mut().insert(Subject::GuestUser(id));
+        let subject = Subject::GuestUser(id);
+        info!("Request by subject: {:?}", &subject);
+        req.extensions_mut().insert(subject);
     }
 
     Ok(next.run(req).await)

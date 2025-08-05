@@ -7,7 +7,7 @@ hard-start:
     docker compose up -d
     cargo run
 
-nuke:
+nuke-start:
     docker compose down -v
     docker compose up -d
     sqlx migrate run

@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
-use axum::{Router, routing::get};
+use axum::{Router, middleware::from_fn, routing::get};
 
-use crate::{quiz::dummy_quiz, state::AppState};
+use crate::{mw::subject_mw, quiz::dummy_quiz, state::AppState};
 
 pub fn quiz_routes(state: Arc<AppState>) -> Router {
-    Router::new().route("/", get(dummy_quiz))
+    Router::new()
+        .route("/", get(dummy_quiz))
+        .layer(from_fn(subject_mw))
 }

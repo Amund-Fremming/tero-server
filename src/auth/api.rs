@@ -1,12 +1,29 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State, http::StatusCode, response::IntoResponse};
+use tracing::debug;
+use tracing_subscriber::field::debug;
 
 use crate::{
-    auth::{Subject, User, db},
+    auth::{PutUserRequest, Subject, User, db},
     error::ServerError,
     state::AppState,
 };
+
+pub async fn get_user_from_subject(
+    State(state): State<Arc<AppState>>,
+    Extension(subject): Extension<Subject>,
+) -> Result<impl IntoResponse, ServerError> {
+    let option = match subject {
+        Subject::GuestUser(id) => db::get_user_by_guest_id(state.get_pool(), id).await?,
+        Subject::RegisteredUser(id) | Subject::Admin(id) => {
+            db::get_user_by_auth0_id(state.get_pool(), id).await?
+        }
+    };
+
+    let user = option.ok_or(ServerError::NotFound("User".into()))?;
+    Ok((StatusCode::OK, Json(user)))
+}
 
 pub async fn create_guest_user(
     State(state): State<Arc<AppState>>,
@@ -20,42 +37,37 @@ pub async fn create_guest_user(
 pub async fn put_user(
     State(state): State<Arc<AppState>>,
     Extension(subject): Extension<Subject>,
+    Json(put_request): Json<PutUserRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
-    if let Subject::GuestUser(_) = subject {
-        return Err(ServerError::Permission(
-            "Guest users cannot update personal information".into(),
-        ));
-    }
+    let auth0_id = match subject {
+        Subject::GuestUser(_) => {
+            return Err(ServerError::Permission(
+                "Guest users cannot update personal information".into(),
+            ));
+        }
+        Subject::RegisteredUser(id) | Subject::Admin(id) => id,
+    };
 
-    Ok(())
-}
+    let user = db::put_user_by_auth0_id(state.get_pool(), auth0_id, put_request).await?;
 
-pub async fn patch_user(
-    State(state): State<Arc<AppState>>,
-    Extension(subject): Extension<Subject>,
-) -> Result<impl IntoResponse, ServerError> {
-    if let Subject::GuestUser(_) = subject {
-        return Err(ServerError::Permission(
-            "Guest users cannot update personal information".into(),
-        ));
-    }
-
-    Ok(())
+    Ok((StatusCode::OK, Json(user)))
 }
 
 pub async fn delete_user(
     State(state): State<Arc<AppState>>,
     Extension(subject): Extension<Subject>,
 ) -> Result<impl IntoResponse, ServerError> {
-    //
+    let auth0_id = match subject {
+        Subject::RegisteredUser(id) | Subject::Admin(id) => id,
+        Subject::GuestUser(_) => {
+            return Err(ServerError::Api(
+                StatusCode::FORBIDDEN,
+                "Not allowed".into(),
+            ));
+        }
+    };
 
-    Ok(())
-}
+    db::delete_user_by_auth0_id(state.get_pool(), auth0_id).await?;
 
-pub async fn get_user(
-    State(state): State<Arc<AppState>>,
-    Extension(subject): Extension<Subject>,
-) -> Result<impl IntoResponse, ServerError> {
-    //
-    Ok(())
+    Ok(StatusCode::NO_CONTENT)
 }

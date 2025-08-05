@@ -15,6 +15,9 @@ pub enum ServerError {
 
     #[error("Permission error: {0}")]
     Permission(String),
+
+    #[error("Not found: {0}")]
+    NotFound(String),
 }
 
 impl IntoResponse for ServerError {
@@ -35,6 +38,10 @@ impl IntoResponse for ServerError {
             ServerError::Permission(e) => {
                 error!("Missing permission: {}", e);
                 (StatusCode::FORBIDDEN, e)
+            }
+            ServerError::NotFound(e) => {
+                error!("Entity not found: {}", e);
+                (StatusCode::NOT_FOUND, e)
             }
         }
         .into_response()

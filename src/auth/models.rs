@@ -1,24 +1,28 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Subject {
-    GuestUser(i32),
-    PersistentUser(i32),
-    Admin(i32),
+    GuestUser(Uuid),
+    RegisteredUser(String),
+    Admin(String),
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "user_type", rename_all = "lowercase")]
 pub enum UserType {
+    #[serde(rename(deserialize = "guest"))]
     Guest,
+
+    #[serde(rename(deserialize = "admin"))]
     Admin,
+
+    #[serde(rename(deserialize = "registered"))]
     Registered,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     id: i32,
     pub guest_id: Uuid,
@@ -27,7 +31,7 @@ pub struct User {
     pub last_active: DateTime<Utc>,
     name: Option<String>,
     email: Option<String>,
-    age: Option<u8>,
+    age: Option<DateTime<Utc>>,
 }
 
 impl User {
@@ -51,4 +55,17 @@ impl User {
     pub fn new_admin_user() -> Self {
         todo!();
     }
+
+    pub fn strip_sensisive_data(&mut self) {
+        self.auth0_id = None;
+        self.name = None;
+        self.email = None;
+        self.age = None;
+    }
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PutUserRequest {
+    name: Option<String>,
+    email: Option<String>,
+    age: Option<DateTime<Utc>>,
 }
