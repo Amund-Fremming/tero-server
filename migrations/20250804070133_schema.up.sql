@@ -24,7 +24,7 @@ CREATE TABLE "user" (
     "last_active" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "name" VARCHAR(100),
     "email" VARCHAR(150),
-    "age" TIMESTAMPTZ
+    "birth_date" DATE
 );
 
 CREATE TABLE "quiz" (

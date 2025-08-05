@@ -1,22 +1,23 @@
-use sqlx::{Pool, Postgres, Row, pool, query};
+use chrono::Utc;
+use sqlx::{Pool, Postgres, Row, query};
 use uuid::Uuid;
 
 use crate::{
-    auth::{PutUserRequest, User},
+    auth::{PutUserRequest, User, UserType},
     error::ServerError,
 };
 
-pub async fn create_guest_user(pool: &Pool<Postgres>, user: &User) -> Result<Uuid, sqlx::Error> {
+pub async fn create_guest_user(pool: &Pool<Postgres>) -> Result<Uuid, sqlx::Error> {
     let row = sqlx::query(
         r#"
         INSERT INTO "user" (guest_id, user_type, last_active)
         VALUES ($1, $2, $3)
         RETURNING guest_id;
-    "#,
+        "#,
     )
-    .bind(&user.guest_id)
-    .bind(&user.user_type)
-    .bind(&user.last_active)
+    .bind(Uuid::new_v4())
+    .bind(UserType::Guest)
+    .bind(Utc::now())
     .fetch_one(pool)
     .await?;
 
@@ -55,8 +56,32 @@ pub async fn put_user_by_auth0_id(
     pool: &Pool<Postgres>,
     auth0_id: String,
     put_request: PutUserRequest,
-) -> Result<User, sqlx::Error> {
-    todo!()
+) -> Result<(), ServerError> {
+    let mut query: String = String::from(r#"UPDATE "user" SET "#);
+    let mut conditions: Vec<String> = Vec::new();
+
+    if let Some(name) = put_request.name {
+        conditions.push(format!("name = {}", name));
+    }
+
+    if let Some(email) = put_request.email {
+        conditions.push(format!("email = {}", email));
+    }
+
+    if let Some(birth_date) = put_request.birth_date {
+        conditions.push(format!("birth_date = {}", birth_date));
+    }
+
+    query.push_str(conditions.join(", ").as_str());
+    query.push_str(format!("WHERE auth0_id = {}", auth0_id).as_str());
+
+    let result = sqlx::query(&query).execute(pool).await?;
+
+    if result.rows_affected() == 0 {
+        return Err(ServerError::Internal("Failed update".into()));
+    }
+
+    Ok(())
 }
 
 pub async fn delete_user_by_auth0_id(

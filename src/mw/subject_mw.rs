@@ -36,7 +36,7 @@ pub async fn subject_mw(mut req: Request<Body>, next: Next) -> Result<Response, 
         // validate token
         // Get user id
         let id = "some-auth0-id".to_string();
-        let subject = Subject::RegisteredUser(id);
+        let subject = Subject::Registered(id);
         info!("Request by subject: {:?}", &subject);
         req.extensions_mut().insert(subject);
     }
@@ -46,7 +46,7 @@ pub async fn subject_mw(mut req: Request<Body>, next: Next) -> Result<Response, 
             ServerError::Api(StatusCode::BAD_REQUEST, "Failed to parse header".into())
         })?;
 
-        let subject = Subject::GuestUser(id);
+        let subject = Subject::Guest(id);
         info!("Request by subject: {:?}", &subject);
         req.extensions_mut().insert(subject);
     }

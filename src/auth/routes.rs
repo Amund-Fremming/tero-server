@@ -7,7 +7,7 @@ use axum::{
 };
 
 use crate::{
-    auth::{create_guest_user, get_user_from_subject},
+    auth::{create_guest_user, delete_user, get_user_from_subject, put_user},
     mw::subject_mw,
     state::AppState,
 };
@@ -20,7 +20,10 @@ pub fn public_auth_routes(state: Arc<AppState>) -> Router {
 
 pub fn protected_auth_routes(state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/", get(get_user_from_subject).post(create_guest_user))
+        .route(
+            "/",
+            get(get_user_from_subject).put(put_user).delete(delete_user),
+        )
         .with_state(state.clone())
         .layer(from_fn(subject_mw))
 }

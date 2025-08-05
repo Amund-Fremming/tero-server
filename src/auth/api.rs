@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State, http::StatusCode, response::IntoResponse};
-use tracing::debug;
-use tracing_subscriber::field::debug;
 
 use crate::{
-    auth::{PutUserRequest, Subject, User, db},
+    auth::{PutUserRequest, Subject, db},
     error::ServerError,
     state::AppState,
 };
@@ -15,8 +13,8 @@ pub async fn get_user_from_subject(
     Extension(subject): Extension<Subject>,
 ) -> Result<impl IntoResponse, ServerError> {
     let option = match subject {
-        Subject::GuestUser(id) => db::get_user_by_guest_id(state.get_pool(), id).await?,
-        Subject::RegisteredUser(id) | Subject::Admin(id) => {
+        Subject::Guest(id) => db::get_user_by_guest_id(state.get_pool(), id).await?,
+        Subject::Registered(id) | Subject::Admin(id) => {
             db::get_user_by_auth0_id(state.get_pool(), id).await?
         }
     };
@@ -28,9 +26,7 @@ pub async fn get_user_from_subject(
 pub async fn create_guest_user(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, ServerError> {
-    let user = User::new_guest_user();
-    let guest_id = db::create_guest_user(state.get_pool(), &user).await?;
-
+    let guest_id = db::create_guest_user(state.get_pool()).await?;
     Ok((StatusCode::CREATED, Json(guest_id)))
 }
 
@@ -40,17 +36,16 @@ pub async fn put_user(
     Json(put_request): Json<PutUserRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
     let auth0_id = match subject {
-        Subject::GuestUser(_) => {
+        Subject::Guest(_) => {
             return Err(ServerError::Permission(
                 "Guest users cannot update personal information".into(),
             ));
         }
-        Subject::RegisteredUser(id) | Subject::Admin(id) => id,
+        Subject::Registered(id) | Subject::Admin(id) => id,
     };
 
-    let user = db::put_user_by_auth0_id(state.get_pool(), auth0_id, put_request).await?;
-
-    Ok((StatusCode::OK, Json(user)))
+    db::put_user_by_auth0_id(state.get_pool(), auth0_id, put_request).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 pub async fn delete_user(
@@ -58,8 +53,8 @@ pub async fn delete_user(
     Extension(subject): Extension<Subject>,
 ) -> Result<impl IntoResponse, ServerError> {
     let auth0_id = match subject {
-        Subject::RegisteredUser(id) | Subject::Admin(id) => id,
-        Subject::GuestUser(_) => {
+        Subject::Registered(id) | Subject::Admin(id) => id,
+        Subject::Guest(_) => {
             return Err(ServerError::Api(
                 StatusCode::FORBIDDEN,
                 "Not allowed".into(),
@@ -68,6 +63,5 @@ pub async fn delete_user(
     };
 
     db::delete_user_by_auth0_id(state.get_pool(), auth0_id).await?;
-
     Ok(StatusCode::NO_CONTENT)
 }

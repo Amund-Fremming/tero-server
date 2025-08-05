@@ -9,8 +9,8 @@
 - [x] Setup basic api for health and health detailed
 - [x] Setup tracing
 - [x] Basic middleware request logger (may not need after some time, but good for debugging)
+- [x] Map out all models
 - [ ] Setup runtimes and their tracing 
-- [-] Map out all models
 
 **State**
 - [x] Implement state with pg pool
@@ -21,12 +21,15 @@
 
 **User**
 - [x] Add support for guest user and persistet user
-- [ ] Auth0 support for persistent user
 - [x] Create middleware for injecting an extention for user
-- [ ] Post, patch, put, delete
+- [x] Post, put, delete
+- [ ] Auth0 support for persistent user
 
 **Cache**
-- [ ] Implement a cache for games
+- [ ] Implement a cache for Quiz 
+- [ ] Implement a cache for Spinner 
+- [ ] Implement a cache for Quiz search pages
+- [ ] Implement a cache for Spinner search pages
 
 **WebSocket**
 - [ ] Add websocket support
