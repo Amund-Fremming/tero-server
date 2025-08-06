@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     quiz::{Question, Quiz},
-    spinner::Spinner,
+    spinner::{Round, Spinner, SpinnerPlayer},
 };
 
 pub static ACTIVE_QUIZ_CACHE: Lazy<ActiveQuizGames> = Lazy::new(|| ActiveQuizGames::new());
@@ -19,12 +19,13 @@ pub static ACTIVE_SPINNER_CACHE: Lazy<ActiveQuizGames> = Lazy::new(|| ActiveQuiz
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct QuizSession {
-    //
+    game: Quiz,
+    questions: Vec<String>, // For sparing storage
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ActiveQuizGames {
-    games: RwLock<HashMap<String, Quiz>>,
+    games: RwLock<HashMap<String, QuizSession>>,
 }
 
 impl ActiveQuizGames {
@@ -52,7 +53,9 @@ impl ActiveQuizGames {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SpinnerSession {
-    //
+    game: Spinner,
+    rounds: Vec<Round>,
+    players: Vec<SpinnerPlayer>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
