@@ -23,6 +23,7 @@
 - [x] Add support for guest user and persistet user
 - [x] Create middleware for injecting an extention for user
 - [x] Post, put, delete
+- [ ] Put endpoint for updating last active
 - [ ] Auth0 support for persistent user
 
 **Cache**
@@ -47,6 +48,12 @@
 
 **Admin**
 - [ ] Endponints for user history, how many active last week, last month and today
+- [ ] Endpoints for fetching logs based on time or ceverity?
+
+**Audit**
+- [ ] Enums for action and ceverity
+- [ ] Implement and SQL migration
+- [ ] Add audit logs where neccesarry
 
 ---
 

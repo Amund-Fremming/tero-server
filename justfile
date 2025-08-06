@@ -3,7 +3,7 @@ push msg:
     git commit -m "{{msg}}"
     git push
 
-hard-start:
+start-all:
     docker compose up -d
     cargo run
 
