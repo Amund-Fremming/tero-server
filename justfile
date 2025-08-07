@@ -18,3 +18,7 @@ gitignore path:
     git add .gitignore
     git commit -m "Removed cached file {{path}}"
     git push
+
+ngrok:
+    ngrok config add-authtoken 2dsWWcIiJBVagPXlEfgdwtzPhKt_6j7fJvy3gfDkdHK3d4L5r
+    ngrok http http://localhost:3000

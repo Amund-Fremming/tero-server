@@ -78,6 +78,7 @@ pub async fn auth0_trigger_endpoint(
     Extension(subject): Extension<Subject>,
     Json(auth0_user): Json<Auth0User>,
 ) -> Result<impl IntoResponse, ServerError> {
+    debug!("HIT");
     match subject {
         Subject::Auth0 => {
             // Inject to db

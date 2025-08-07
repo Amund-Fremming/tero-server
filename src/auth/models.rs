@@ -13,12 +13,12 @@ pub enum Subject {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Auth0User {
     auth0_id: String,
-    given_name: String,
-    family_name: String,
-    email: String,
-    email_verified: bool,
-    phone: String,
-    phone_verified: bool,
+    given_name: Option<String>,
+    family_name: Option<String>,
+    email: Option<String>,
+    email_verified: Option<bool>,
+    phone: Option<String>,
+    phone_verified: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]
