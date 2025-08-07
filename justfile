@@ -13,7 +13,8 @@ nuke-start:
     sqlx migrate run
 
 gitignore path:
-    echo "\n{{path}}" >> .gitignore 
+    echo "\n{{path}}" >> .gitignore
     git rm --cached "{{path}}"
+    git add .gitignore
     git commit -m "Removed cached file {{path}}"
     git push
