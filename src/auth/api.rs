@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State, http::StatusCode, response::IntoResponse};
+use tracing::{debug, info};
 
 use crate::{
-    auth::{PutUserRequest, Subject, db},
+    auth::{Auth0User, PutUserRequest, Subject, db},
     error::ServerError,
     state::AppState,
 };
@@ -16,6 +17,12 @@ pub async fn get_user_from_subject(
         Subject::Guest(id) => db::get_user_by_guest_id(state.get_pool(), id).await?,
         Subject::Registered(id) | Subject::Admin(id) => {
             db::get_user_by_auth0_id(state.get_pool(), id).await?
+        }
+        Subject::Auth0 => {
+            return Err(ServerError::Api(
+                StatusCode::FORBIDDEN,
+                "Not allowed".into(),
+            ));
         }
     };
 
@@ -36,12 +43,12 @@ pub async fn put_user(
     Json(put_request): Json<PutUserRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
     let auth0_id = match subject {
-        Subject::Guest(_) => {
+        Subject::Registered(id) | Subject::Admin(id) => id,
+        _ => {
             return Err(ServerError::Permission(
                 "Guest users cannot update personal information".into(),
             ));
         }
-        Subject::Registered(id) | Subject::Admin(id) => id,
     };
 
     db::put_user_by_auth0_id(state.get_pool(), auth0_id, put_request).await?;
@@ -54,7 +61,7 @@ pub async fn delete_user(
 ) -> Result<impl IntoResponse, ServerError> {
     let auth0_id = match subject {
         Subject::Registered(id) | Subject::Admin(id) => id,
-        Subject::Guest(_) => {
+        _ => {
             return Err(ServerError::Api(
                 StatusCode::FORBIDDEN,
                 "Not allowed".into(),
@@ -64,4 +71,27 @@ pub async fn delete_user(
 
     db::delete_user_by_auth0_id(state.get_pool(), auth0_id).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn auth0_trigger_endpoint(
+    State(state): State<Arc<AppState>>,
+    Extension(subject): Extension<Subject>,
+    Json(auth0_user): Json<Auth0User>,
+) -> Result<impl IntoResponse, ServerError> {
+    match subject {
+        Subject::Auth0 => {
+            // Inject to db
+            info!("Auth0 post registration trigger was triggered");
+            // TODO - remove
+            debug!("{}", serde_json::to_string_pretty(&auth0_user).unwrap());
+
+            Ok(())
+        }
+        _ => {
+            return Err(ServerError::Api(
+                StatusCode::FORBIDDEN,
+                "Not allowed".into(),
+            ));
+        }
+    }
 }

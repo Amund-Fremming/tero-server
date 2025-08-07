@@ -7,6 +7,18 @@ pub enum Subject {
     Guest(Uuid),
     Registered(String),
     Admin(String),
+    Auth0,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Auth0User {
+    auth0_id: String,
+    given_name: String,
+    family_name: String,
+    email: String,
+    email_verified: bool,
+    phone: String,
+    phone_verified: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]

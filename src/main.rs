@@ -2,6 +2,7 @@ use std::env;
 
 use axum::{Router, middleware::from_fn};
 use dotenv::dotenv;
+use once_cell::sync::Lazy;
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::FmtSubscriber;
 
@@ -9,7 +10,6 @@ use crate::{
     auth::{protected_auth_routes, public_auth_routes},
     health::health_routes,
     mw::{request_mw, subject_mw},
-    quiz::quiz_routes,
     state::AppState,
 };
 
@@ -23,10 +23,17 @@ mod spinner;
 mod state;
 mod ws;
 
+static AUTH0_WEBHOOK_KEY: Lazy<String> = Lazy::new(|| {
+    env::var("AUTH0_WEBHOOK_KEY").expect("AUTH0_WEBHOOK_KEY is missing as env variable")
+});
+
 #[tokio::main]
 async fn main() {
     // Initialize .env
     dotenv().ok();
+
+    // Validate that env variables exists
+    Lazy::force(&AUTH0_WEBHOOK_KEY);
 
     // Initialize logging
     let subscriber = FmtSubscriber::builder()

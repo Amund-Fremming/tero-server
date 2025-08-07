@@ -26,6 +26,12 @@ pub async fn create_guest_user(pool: &Pool<Postgres>) -> Result<Uuid, sqlx::Erro
     Ok(guest_id)
 }
 
+/*
+pub async fn create_registered_user(pool: &Pool<Postgres>) -> Result<(), sqlx::Error> {
+    //
+}
+    */
+
 pub async fn get_user_by_auth0_id(
     pool: &Pool<Postgres>,
     auth0_id: String,
