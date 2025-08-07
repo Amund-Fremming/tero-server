@@ -11,3 +11,8 @@ nuke-start:
     docker compose down -v
     docker compose up -d
     sqlx migrate run
+
+gitignore path:
+    git rm --cached "{{path}}"
+    git commit -m "Removed cached file {{path}}"
+    git push

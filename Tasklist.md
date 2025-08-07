@@ -10,7 +10,7 @@
 - [x] Setup tracing
 - [x] Basic middleware request logger (may not need after some time, but good for debugging)
 - [x] Map out all models
-- [ ] Setup runtimes and their tracing 
+- [ ] Setup runtimes with .env files GITIGNORE, maybe also runtimmes for auth0, so we have separate triggers for different environments. Less pain to work with
 
 **State**
 - [x] Implement state with pg pool
