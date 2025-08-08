@@ -2,6 +2,8 @@
 
 ## Did not finish last time
 
+- Change Permisisons out with Claims? and the same methods on Claims? Less code but biger object..
+- Does not validate expired time
 - Cleanup for subject_mw
 - Permisisons extention dont work
 

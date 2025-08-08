@@ -41,8 +41,7 @@ pub async fn subject_mw(
         let (subject, permissions) =
             get_subject_and_permissions(auth_header.unwrap(), state.get_jwks()).await?;
 
-        info!("Request by subject: {:?}", &subject);
-        info!("Perms (mw): {:?}", &permissions);
+        debug!("Request by subject: {:?}", &subject);
         req.extensions_mut().insert(permissions);
         req.extensions_mut().insert(subject);
     }
@@ -87,18 +86,10 @@ impl Permissions {
         Self { permissions }
     }
 
-    pub fn has(&self, required_perms: Vec<Permission>) -> Option<Vec<Permission>> {
-        let mut missing_perms: Vec<Permission> = Vec::new();
-        for perm in required_perms {
-            if !self.permissions.contains(&perm) {
-                missing_perms.push(perm);
-            }
+    pub fn has(&self, required_perm: Permission) -> Option<Permission> {
+        if !self.permissions.contains(&required_perm) {
+            return Some(required_perm);
         }
-
-        if missing_perms.len() != 0 {
-            return Some(missing_perms);
-        }
-
         None
     }
 }
@@ -124,7 +115,6 @@ async fn get_subject_and_permissions(
             .map_err(|e| ServerError::Json(format!("Deserialization error: {:?}", e)))?;
 
         let subject = Subject::Registered(claims.sub);
-        debug!("Inside perms subj ():  {:?}", claims.permissions);
         let permissions = Permissions::new(claims.permissions);
 
         return Ok((subject, permissions));

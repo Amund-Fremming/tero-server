@@ -2,6 +2,8 @@ use axum::{http::StatusCode, response::IntoResponse};
 use thiserror::Error;
 use tracing::error;
 
+use crate::mw::Permission;
+
 #[derive(Debug, Error)]
 pub enum ServerError {
     #[error("Sqlx failed: {0}")]
@@ -14,7 +16,7 @@ pub enum ServerError {
     Api(StatusCode, String),
 
     #[error("Permission error")]
-    Permission(Vec<String>),
+    Permission(Permission),
 
     #[error("Access denied error")]
     AccessDenied,
@@ -48,8 +50,11 @@ impl IntoResponse for ServerError {
                 (sc, msg)
             }
             ServerError::Permission(missing) => {
-                error!("Missing permission(s): {:?}", missing);
-                (StatusCode::FORBIDDEN, String::from("Missing permission(s)"))
+                error!("Missing permission: {:?}", missing);
+                (
+                    StatusCode::FORBIDDEN,
+                    format!("Missing permission: {:?}", missing),
+                )
             }
             ServerError::NotFound(e) => {
                 error!("Entity not found: {}", e);

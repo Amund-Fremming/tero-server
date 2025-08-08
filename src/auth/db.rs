@@ -1,5 +1,5 @@
 use chrono::Utc;
-use sqlx::{Pool, Postgres, Row, query};
+use sqlx::{Pool, Postgres, Row, query, query_as};
 use uuid::Uuid;
 
 use crate::{
@@ -134,4 +134,10 @@ pub async fn delete_user_by_auth0_id(
     }
 
     Ok(())
+}
+
+pub async fn list_all_users(pool: &Pool<Postgres>) -> Result<Vec<User>, sqlx::Error> {
+    query_as::<_, User>(r#"SELECT * FROM "user""#)
+        .fetch_all(pool)
+        .await
 }

@@ -1,4 +1,4 @@
-use std::{fs::Permissions, sync::Arc};
+use std::sync::Arc;
 
 use axum::{
     Extension, Json,
@@ -9,8 +9,9 @@ use axum::{
 use tracing::{debug, info};
 
 use crate::{
-    auth::{Auth0User, PutUserRequest, Subject, db},
+    auth::{Auth0User, PutUserRequest, Subject, User, db},
     error::ServerError,
+    mw::{Permission, Permissions},
     state::AppState,
 };
 
@@ -99,4 +100,24 @@ pub async fn auth0_trigger_endpoint(
     debug!("{}", serde_json::to_string_pretty(&auth0_user).unwrap());
 
     Ok(())
+}
+
+pub async fn list_all_users(
+    State(state): State<Arc<AppState>>,
+    Extension(subject): Extension<Subject>,
+    Extension(permissions): Extension<Permissions>,
+) -> Result<Vec<User>, ServerError> {
+    let Subject::Registered(_) = subject else {
+        return Err(ServerError::Api(
+            StatusCode::FORBIDDEN,
+            "Not allowed".into(),
+        ));
+    };
+
+    if let Some(missing) = permissions.has(Permission::ReadAdmin) {
+        return Err(ServerError::Permission(missing));
+    };
+
+    let users = db::list_all_users(state.get_pool()).await?;
+    Ok(users)
 }
