@@ -13,11 +13,23 @@ pub enum ServerError {
     #[error("Api error: {1}")]
     Api(StatusCode, String),
 
-    #[error("Permission error: {0}")]
-    Permission(String),
+    #[error("Permission error")]
+    Permission(Vec<String>),
+
+    #[error("Access denied error")]
+    AccessDenied,
 
     #[error("Not found: {0}")]
     NotFound(String),
+
+    #[error("Request error: {0}")]
+    Request(#[from] reqwest::Error),
+
+    #[error("JWT verification error: {0}")]
+    JwtVerification(String),
+
+    #[error("Json error: {0}")]
+    Json(String),
 }
 
 impl IntoResponse for ServerError {
@@ -29,19 +41,38 @@ impl IntoResponse for ServerError {
             }
             ServerError::Internal(e) => {
                 error!("Internal server error: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, e)
+                (StatusCode::INTERNAL_SERVER_ERROR, String::new())
             }
             ServerError::Api(sc, msg) => {
                 error!("Api error: {} - {}", sc, msg);
                 (sc, msg)
             }
-            ServerError::Permission(e) => {
-                error!("Missing permission: {}", e);
-                (StatusCode::FORBIDDEN, e)
+            ServerError::Permission(missing) => {
+                error!("Missing permission(s): {:?}", missing);
+                (StatusCode::FORBIDDEN, String::from("Missing permission(s)"))
             }
             ServerError::NotFound(e) => {
                 error!("Entity not found: {}", e);
                 (StatusCode::NOT_FOUND, e)
+            }
+            ServerError::AccessDenied => {
+                error!("Access denied for requesting entity");
+                (StatusCode::FORBIDDEN, String::from("Access denied"))
+            }
+            ServerError::Request(e) => {
+                error!("Failed to send request: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    String::from("Failed to access third party"),
+                )
+            }
+            ServerError::JwtVerification(e) => {
+                error!("Failed to verify JWT: {}", e);
+                (StatusCode::UNAUTHORIZED, String::new())
+            }
+            ServerError::Json(e) => {
+                error!("Json error: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, String::new())
             }
         }
         .into_response()

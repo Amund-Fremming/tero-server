@@ -1,6 +1,11 @@
-use std::sync::Arc;
+use std::{fs::Permissions, sync::Arc};
 
-use axum::{Extension, Json, extract::State, http::StatusCode, response::IntoResponse};
+use axum::{
+    Extension, Json,
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use tracing::{debug, info};
 
 use crate::{
@@ -12,17 +17,17 @@ use crate::{
 pub async fn get_user_from_subject(
     State(state): State<Arc<AppState>>,
     Extension(subject): Extension<Subject>,
+    Extension(permissions): Extension<Permissions>,
 ) -> Result<impl IntoResponse, ServerError> {
+    debug!("Perms: {:?}", permissions); // TODO - remove
+
     let option = match subject {
         Subject::Guest(id) => db::get_user_by_guest_id(state.get_pool(), id).await?,
         Subject::Registered(id) | Subject::Admin(id) => {
             db::get_user_by_auth0_id(state.get_pool(), id).await?
         }
         Subject::Auth0 => {
-            return Err(ServerError::Api(
-                StatusCode::FORBIDDEN,
-                "Not allowed".into(),
-            ));
+            return Err(ServerError::AccessDenied);
         }
     };
 
@@ -44,11 +49,7 @@ pub async fn put_user(
 ) -> Result<impl IntoResponse, ServerError> {
     let auth0_id = match subject {
         Subject::Registered(id) | Subject::Admin(id) => id,
-        _ => {
-            return Err(ServerError::Permission(
-                "Guest users cannot update personal information".into(),
-            ));
-        }
+        _ => return Err(ServerError::AccessDenied),
     };
 
     db::put_user_by_auth0_id(state.get_pool(), auth0_id, put_request).await?;
@@ -62,10 +63,7 @@ pub async fn delete_user(
     let auth0_id = match subject {
         Subject::Registered(id) | Subject::Admin(id) => id,
         _ => {
-            return Err(ServerError::Api(
-                StatusCode::FORBIDDEN,
-                "Not allowed".into(),
-            ));
+            return Err(ServerError::AccessDenied);
         }
     };
 
@@ -73,26 +71,32 @@ pub async fn delete_user(
     Ok(StatusCode::NO_CONTENT)
 }
 
+pub async fn update_user_activity(
+    State(state): State<Arc<AppState>>,
+    Extension(subject): Extension<Subject>,
+    Path(user_id): Path<i32>,
+) -> Result<(), ServerError> {
+    if let Subject::Auth0 = subject {
+        return Err(ServerError::AccessDenied);
+    };
+
+    db::update_user_activity(state.get_pool(), user_id).await?;
+    Ok(())
+}
+
 pub async fn auth0_trigger_endpoint(
     State(state): State<Arc<AppState>>,
     Extension(subject): Extension<Subject>,
     Json(auth0_user): Json<Auth0User>,
 ) -> Result<impl IntoResponse, ServerError> {
-    debug!("HIT");
-    match subject {
-        Subject::Auth0 => {
-            // Inject to db
-            info!("Auth0 post registration trigger was triggered");
-            // TODO - remove
-            debug!("{}", serde_json::to_string_pretty(&auth0_user).unwrap());
+    let Subject::Auth0 = subject else {
+        return Err(ServerError::AccessDenied);
+    };
 
-            Ok(())
-        }
-        _ => {
-            return Err(ServerError::Api(
-                StatusCode::FORBIDDEN,
-                "Not allowed".into(),
-            ));
-        }
-    }
+    // Inject to db
+    info!("Auth0 post registration trigger was triggered");
+    // TODO - remove
+    debug!("{}", serde_json::to_string_pretty(&auth0_user).unwrap());
+
+    Ok(())
 }

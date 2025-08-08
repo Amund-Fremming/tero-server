@@ -1,6 +1,9 @@
 use std::env;
 
-use axum::{Router, middleware::from_fn};
+use axum::{
+    Router,
+    middleware::{from_fn, from_fn_with_state},
+};
 use dotenv::dotenv;
 use once_cell::sync::Lazy;
 use tracing::{info, level_filters::LevelFilter};
@@ -26,6 +29,10 @@ mod ws;
 static AUTH0_WEBHOOK_KEY: Lazy<String> = Lazy::new(|| {
     env::var("AUTH0_WEBHOOK_KEY").expect("AUTH0_WEBHOOK_KEY is missing as env variable")
 });
+static AUTH0_DOMAIN: Lazy<String> =
+    Lazy::new(|| env::var("AUTH0_DOMAIN").expect("AUTH0_DOMAIN is missing as env variable"));
+static AUTH0_AUDIENCE: Lazy<String> =
+    Lazy::new(|| env::var("AUTH0_AUDIENCE").expect("AUTH0_AUDIENCE is missing as env variable"));
 
 #[tokio::main]
 async fn main() {
@@ -34,6 +41,7 @@ async fn main() {
 
     // Validate that env variables exists
     Lazy::force(&AUTH0_WEBHOOK_KEY);
+    Lazy::force(&AUTH0_DOMAIN);
 
     // Initialize logging
     let subscriber = FmtSubscriber::builder()
@@ -56,7 +64,7 @@ async fn main() {
 
     let protected_routes = Router::new()
         .nest("/user", protected_auth_routes(state.clone()))
-        .layer(from_fn(subject_mw));
+        .layer(from_fn_with_state(state.clone(), subject_mw));
 
     let app = Router::new()
         .merge(protected_routes)

@@ -1,9 +1,17 @@
 # Tasklist
 
+## Did not finish last time
+
+- Cleanup for subject_mw
+- Permisisons extention dont work
+
 ## Thoughts
 
 - Implement wrapper objects for cache, enabling games to have questions and players
 - Change from doing opåerations on user with auth0_id, or create a index on the field
+- Consider changing from validating if a user is a guest from the header to a permission based validation
+- Split the fn get_subject_and_permissins into two fn, SRP
+- Rename subject mw to auth_mw or so?
 
 ## Tasklist
 
@@ -24,12 +32,23 @@
 - [x] Implement descriptive error handling with internal logging not visible to the outside
 - [x] Implement IntoResponse for all errors for the ServerError
 
-**User**
+**Auth0**
+- [x] App (fe) application setup
+- [ ] API (be) setup
+- [ ] Add permissions
+
+**User/Auth**
 - [x] Add support for guest user and persistet user
 - [x] Create middleware for injecting an extention for user
 - [x] Post, put, delete
-- [ ] Put endpoint for updating last active
-- [ ] Auth0 support for persistent user
+- [x] Put endpoint for updating last active
+- [x] Auth0 webhook for users
+- [ ] Implement peristent storage for webhook api
+- [ ] Permissions extention
+- [ ] Permission checks for endpoints
+- [ ] List all users (admin access)
+- [ ] Decode and validate tokens
+- [ ] Maybe update endpoints to require user id for fetching users, targeting query on id, not auth0_id or guest_id. this also makes it possible for admins to query users 
 
 **Cache**
 - [ ] Implement a cache for Quiz 

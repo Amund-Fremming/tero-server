@@ -32,6 +32,28 @@ pub async fn create_registered_user(pool: &Pool<Postgres>) -> Result<(), sqlx::E
 }
     */
 
+pub async fn update_user_activity(pool: &Pool<Postgres>, user_id: i32) -> Result<(), ServerError> {
+    let row = sqlx::query(
+        r#"
+        UPDATE "user"
+        SET last_updated = $1
+        WHERE id = $2
+        "#,
+    )
+    .bind(&Utc::now())
+    .bind(&user_id)
+    .execute(pool)
+    .await?;
+
+    if row.rows_affected() == 0 {
+        return Err(ServerError::Internal(
+            "No rows affected when updating user activity".into(),
+        ));
+    }
+
+    Ok(())
+}
+
 pub async fn get_user_by_auth0_id(
     pool: &Pool<Postgres>,
     auth0_id: String,
@@ -84,7 +106,9 @@ pub async fn put_user_by_auth0_id(
     let result = sqlx::query(&query).execute(pool).await?;
 
     if result.rows_affected() == 0 {
-        return Err(ServerError::Internal("Failed update".into()));
+        return Err(ServerError::Internal(
+            "No rows affected when updating user".into(),
+        ));
     }
 
     Ok(())
@@ -104,7 +128,9 @@ pub async fn delete_user_by_auth0_id(
     .await?;
 
     if result.rows_affected() == 0 {
-        return Err(ServerError::Internal("Failed delete".into()));
+        return Err(ServerError::Internal(
+            "No rows affected when deleting user".into(),
+        ));
     }
 
     Ok(())
