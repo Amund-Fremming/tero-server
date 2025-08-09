@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::sync::Arc;
 
 use axum::{
     body::Body,
@@ -8,20 +8,19 @@ use axum::{
     response::Response,
 };
 use jsonwebtoken::{Algorithm, DecodingKey, TokenData, Validation, decode, decode_header};
-use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info};
 use uuid::Uuid;
 
 use crate::{
     AUTH0_AUDIENCE, AUTH0_DOMAIN,
-    auth::Subject,
+    auth::{Claims, PermissionCtx, Subject},
     error::ServerError,
     state::{AppState, Jwks},
 };
 
 static AUTH0_WEBHOOK_KEY: &str = "Auth0-Webhook-Key";
 
-pub async fn subject_mw(
+pub async fn auth_mw(
     State(state): State<Arc<AppState>>,
     mut req: Request<Body>,
     next: Next,
@@ -55,67 +54,17 @@ pub async fn subject_mw(
     Ok(next.run(req).await)
 }
 
-// MOVE
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    aud: Vec<String>,
-    azp: String,
-    exp: i32,
-    iat: i32,
-    iss: String,
-    pub scope: String,
-    pub sub: String,
-    pub permissions: HashSet<Permission>,
-}
-
-// Move
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Permissions {
-    permissions: HashSet<Permission>,
-}
-
-// Move
-impl Permissions {
-    pub fn none() -> Self {
-        Self {
-            permissions: HashSet::new(),
-        }
-    }
-
-    pub fn new(permissions: HashSet<Permission>) -> Self {
-        Self { permissions }
-    }
-
-    pub fn has(&self, required_perm: Permission) -> Option<Permission> {
-        if !self.permissions.contains(&required_perm) {
-            return Some(required_perm);
-        }
-        None
-    }
-}
-
-// MOVE
-#[derive(Debug, Serialize, Deserialize, Hash, PartialEq, Eq, Clone)]
-pub enum Permission {
-    #[serde(rename(deserialize = "read:admin"))]
-    ReadAdmin,
-    #[serde(rename(deserialize = "write:admin"))]
-    WriteAdmin,
-    #[serde(rename(deserialize = "save:games"))]
-    SaveGames,
-}
-
 async fn get_subject_and_permissions(
     header_value: String,
     jwks: &Jwks,
-) -> Result<(Subject, Permissions), ServerError> {
+) -> Result<(Subject, PermissionCtx), ServerError> {
     if let Some(token) = header_value.strip_prefix("Bearer ") {
         let token_data = verify_jwt(token, jwks).await?;
         let claims: Claims = serde_json::from_value(token_data.claims)
             .map_err(|e| ServerError::Json(format!("Deserialization error: {:?}", e)))?;
 
         let subject = Subject::Registered(claims.sub);
-        let permissions = Permissions::new(claims.permissions);
+        let permissions = PermissionCtx::new(claims.permissions);
 
         return Ok((subject, permissions));
     }
@@ -124,7 +73,7 @@ async fn get_subject_and_permissions(
         let id: Uuid = value.parse().map_err(|_| {
             ServerError::Api(StatusCode::BAD_REQUEST, "Failed to parse header".into())
         })?;
-        return Ok((Subject::Guest(id), Permissions::none()));
+        return Ok((Subject::Guest(id), PermissionCtx::none()));
     }
 
     Err(ServerError::Api(

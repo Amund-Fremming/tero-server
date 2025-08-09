@@ -9,16 +9,15 @@ use axum::{
 use tracing::{debug, info};
 
 use crate::{
-    auth::{Auth0User, PutUserRequest, Subject, User, db},
+    auth::{Auth0User, Permission, PermissionCtx, PutUserRequest, Subject, User, db},
     error::ServerError,
-    mw::{Permission, Permissions},
     state::AppState,
 };
 
 pub async fn get_user_from_subject(
     State(state): State<Arc<AppState>>,
     Extension(subject): Extension<Subject>,
-    Extension(permissions): Extension<Permissions>,
+    Extension(permissions): Extension<PermissionCtx>,
 ) -> Result<impl IntoResponse, ServerError> {
     debug!("Perms: {:?}", permissions); // TODO - remove
 
@@ -105,7 +104,7 @@ pub async fn auth0_trigger_endpoint(
 pub async fn list_all_users(
     State(state): State<Arc<AppState>>,
     Extension(subject): Extension<Subject>,
-    Extension(permissions): Extension<Permissions>,
+    Extension(permissions): Extension<PermissionCtx>,
 ) -> Result<Vec<User>, ServerError> {
     let Subject::Registered(_) = subject else {
         return Err(ServerError::Api(

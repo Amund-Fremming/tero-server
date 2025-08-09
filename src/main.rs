@@ -12,7 +12,7 @@ use tracing_subscriber::FmtSubscriber;
 use crate::{
     auth::{protected_auth_routes, public_auth_routes},
     health::health_routes,
-    mw::{request_mw, subject_mw},
+    mw::{auth_mw, request_mw},
     state::AppState,
 };
 
@@ -64,7 +64,7 @@ async fn main() {
 
     let protected_routes = Router::new()
         .nest("/user", protected_auth_routes(state.clone()))
-        .layer(from_fn_with_state(state.clone(), subject_mw));
+        .layer(from_fn_with_state(state.clone(), auth_mw));
 
     let app = Router::new()
         .merge(protected_routes)
