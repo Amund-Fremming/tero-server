@@ -3,9 +3,19 @@ use sqlx::{Pool, Postgres, Row, query, query_as};
 use uuid::Uuid;
 
 use crate::{
-    auth::{PutUserRequest, User, UserType},
+    auth::{Auth0User, PutUserRequest, User, UserType},
     error::ServerError,
 };
+
+pub async fn get_user_by_id(
+    pool: &Pool<Postgres>,
+    user_id: i32,
+) -> Result<Option<User>, sqlx::Error> {
+    sqlx::query_as::<_, User>(r#"SELECT * FROM "user" WHERE id = $1"#)
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await
+}
 
 pub async fn create_guest_user(pool: &Pool<Postgres>) -> Result<Uuid, sqlx::Error> {
     let row = sqlx::query(
@@ -22,15 +32,40 @@ pub async fn create_guest_user(pool: &Pool<Postgres>) -> Result<Uuid, sqlx::Erro
     .await?;
 
     let guest_id = row.get("guest_id");
-
     Ok(guest_id)
 }
 
-/*
-pub async fn create_registered_user(pool: &Pool<Postgres>) -> Result<(), sqlx::Error> {
-    //
+pub async fn create_registered_user(
+    pool: &Pool<Postgres>,
+    auth0_user: &Auth0User,
+) -> Result<(), ServerError> {
+    let fullname = format!(
+        "{} {}",
+        auth0_user.given_name.as_deref().unwrap_or(""),
+        auth0_user.family_name.as_deref().unwrap_or("")
+    );
+
+    let result = sqlx::query(
+        r#"
+        INSERT INTO "user" (auth0_id, user_type, name, email)
+        VALUES ($1, $2, $3, $4)
+        "#,
+    )
+    .bind(&auth0_user.auth0_id)
+    .bind(&UserType::Registered)
+    .bind(&fullname)
+    .bind(&auth0_user.email)
+    .execute(pool)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        return Err(ServerError::Internal(
+            "No rows affected when auth0 triggered creating a new user".into(),
+        ));
+    }
+
+    Ok(())
 }
-    */
 
 pub async fn update_user_activity(pool: &Pool<Postgres>, user_id: i32) -> Result<(), ServerError> {
     let row = sqlx::query(
@@ -80,9 +115,9 @@ pub async fn get_user_by_guest_id(
     Ok(opt)
 }
 
-pub async fn put_user_by_auth0_id(
+pub async fn patch_user_by_id(
     pool: &Pool<Postgres>,
-    auth0_id: String,
+    user_id: i32,
     put_request: PutUserRequest,
 ) -> Result<(), ServerError> {
     let mut query: String = String::from(r#"UPDATE "user" SET "#);
@@ -101,7 +136,7 @@ pub async fn put_user_by_auth0_id(
     }
 
     query.push_str(conditions.join(", ").as_str());
-    query.push_str(format!("WHERE auth0_id = {}", auth0_id).as_str());
+    query.push_str(format!("WHERE id = {}", user_id).as_str());
 
     let result = sqlx::query(&query).execute(pool).await?;
 
@@ -114,15 +149,12 @@ pub async fn put_user_by_auth0_id(
     Ok(())
 }
 
-pub async fn delete_user_by_auth0_id(
-    pool: &Pool<Postgres>,
-    auth0_id: String,
-) -> Result<(), ServerError> {
+pub async fn delete_user_by_id(pool: &Pool<Postgres>, user_id: i32) -> Result<(), ServerError> {
     let result = query!(
         r#"
-        DELETE FROM "user" WHERE auth0_id = $1;
+        DELETE FROM "user" WHERE id = $1;
         "#,
-        auth0_id
+        user_id
     )
     .execute(pool)
     .await?;

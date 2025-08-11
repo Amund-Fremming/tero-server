@@ -29,8 +29,8 @@
 
 **Auth0**
 - [x] App (fe) application setup
-- [ ] API (be) setup
-- [ ] Add permissions
+- [x] API (be) setup
+- [x] Add permissions
 
 **User/Auth**
 - [x] Add support for guest user and persistet user
@@ -38,12 +38,13 @@
 - [x] Post, put, delete
 - [x] Put endpoint for updating last active
 - [x] Auth0 webhook for users
-- [ ] Implement peristent storage for webhook api
-- [ ] Permissions extention
+- [x] Implement peristent storage for webhook api
+- [x] Permissions extention
+- [x] List all users (admin access)
+- [x] Decode and validate tokens
 - [ ] Permission checks for endpoints
-- [ ] List all users (admin access)
-- [ ] Decode and validate tokens
 - [ ] Maybe update endpoints to require user id for fetching users, targeting query on id, not auth0_id or guest_id. this also makes it possible for admins to query users 
+- [ ] Update user sync from backend to auth0 (daily job/trigger)
 
 **Cache**
 - [ ] Implement a cache for Quiz 

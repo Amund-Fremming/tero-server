@@ -28,11 +28,8 @@ impl PermissionCtx {
         Self { permissions }
     }
 
-    pub fn has(&self, required_perm: Permission) -> Option<Permission> {
-        if !self.permissions.contains(&required_perm) {
-            return Some(required_perm);
-        }
-        None
+    pub fn has(&self, required_perm: Permission) -> bool {
+        self.permissions.contains(&required_perm)
     }
 }
 
