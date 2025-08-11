@@ -1,12 +1,13 @@
 # Tasklist
 
+## Left off
+
+- Generic helper function to read/write to cache
+- Generic fn to hold data for cache, dont need multiple objects, only a wrapper
+
 ## Thoughts
 
-- Implement wrapper objects for cache, enabling games to have questions and players
-- Change from doing opåerations on user with auth0_id, or create a index on the field
-- Consider changing from validating if a user is a guest from the header to a permission based validation
 - Split the fn get_subject_and_permissins into two fn, SRP
-- Rename subject mw to auth_mw or so?
 
 ## Tasklist
 
@@ -47,7 +48,7 @@
 - [ ] Update user sync from backend to auth0 (daily job/trigger)
 
 **Cache**
-- [ ] Implement a cache for Quiz 
+- [x] Implement a cache for Quiz 
 - [ ] Implement a cache for Spinner 
 - [ ] Implement a cache for Quiz search pages
 - [ ] Implement a cache for Spinner search pages
