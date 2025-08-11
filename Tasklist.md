@@ -1,9 +1,5 @@
 # Tasklist
 
-## Did not finish last time
-
-- Does not validate expired time
-
 ## Thoughts
 
 - Implement wrapper objects for cache, enabling games to have questions and players
