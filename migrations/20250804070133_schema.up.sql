@@ -33,7 +33,6 @@ CREATE TABLE "quiz" (
     "description" VARCHAR(150),
     "category" game_category NOT NULL DEFAULT 'casual',
     "iterations" INTEGER NOT NULL DEFAULT 0,
-    "current_iteration" INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE "question" (

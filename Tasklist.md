@@ -42,8 +42,8 @@
 - [x] Permissions extention
 - [x] List all users (admin access)
 - [x] Decode and validate tokens
-- [ ] Permission checks for endpoints
-- [ ] Maybe update endpoints to require user id for fetching users, targeting query on id, not auth0_id or guest_id. this also makes it possible for admins to query users 
+- [x] Permission checks for endpoints
+- [x] Maybe update endpoints to require user id for fetching users, targeting query on id, not auth0_id or guest_id. this also makes it possible for admins to query users 
 - [ ] Update user sync from backend to auth0 (daily job/trigger)
 
 **Cache**

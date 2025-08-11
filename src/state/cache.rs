@@ -2,30 +2,20 @@ use std::{collections::HashMap, sync::RwLock};
 
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{
-    quiz::{Question, Quiz},
+    error::ServerError,
+    quiz::QuizSession,
     spinner::{Round, Spinner, SpinnerPlayer},
 };
 
 pub static ACTIVE_QUIZ_CACHE: Lazy<ActiveQuizGames> = Lazy::new(|| ActiveQuizGames::new());
 pub static ACTIVE_SPINNER_CACHE: Lazy<ActiveQuizGames> = Lazy::new(|| ActiveQuizGames::new());
 
-/*
- * THOUGHTS
- * - Make this generic service, update by passing in closures of the game and how its updated?
- * - Grandulated control with many functions
- */
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct QuizSession {
-    game: Quiz,
-    questions: Vec<String>, // For sparing storage
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ActiveQuizGames {
-    games: RwLock<HashMap<String, QuizSession>>,
+    games: RwLock<HashMap<Uuid, QuizSession>>,
 }
 
 impl ActiveQuizGames {
@@ -35,19 +25,36 @@ impl ActiveQuizGames {
         }
     }
 
-    pub fn add_question(&self, game_name: &str, title: &str) {
-        let mut map = self.games.write().unwrap();
-        let game = map.get(game_name).unwrap();
-        //  update some
-        // game.update()
+    pub fn read<F, R>(&mut self, id: Uuid, read_fn: F) -> Result<R, ServerError>
+    where
+        F: FnOnce(&QuizSession) -> R,
+    {
+        let map = self
+            .games
+            .write()
+            .map_err(|_| ServerError::RwLock("Failed to open read lock".into()))?;
+
+        let session = map
+            .get(&id)
+            .ok_or_else(|| ServerError::GameSession("Quiz".into(), "Does not exist".into()))?;
+
+        Ok(read_fn(session))
     }
 
-    pub fn read_question(&self, game_name: &str) -> String {
-        let map = self.games.read().unwrap();
-        let game = map.get(game_name).unwrap();
-        // get a question..
+    pub fn write<F>(&mut self, id: Uuid, mut write_fn: F) -> Result<(), ServerError>
+    where
+        F: FnMut(&mut QuizSession),
+    {
+        let mut map = self.games.write().map_err(|_| {
+            ServerError::GameSession("Quiz".into(), "Failed to open write lock".into())
+        })?;
 
-        String::new()
+        let session = map
+            .get_mut(&id)
+            .ok_or_else(|| ServerError::GameSession("Quiz".into(), "Does not exist".into()))?;
+
+        write_fn(session);
+        Ok(())
     }
 }
 

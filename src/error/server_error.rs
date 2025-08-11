@@ -32,6 +32,12 @@ pub enum ServerError {
 
     #[error("Json error: {0}")]
     Json(String),
+
+    #[error("Read-write lock error: {0}")]
+    RwLock(String),
+
+    #[error("Game session error: {0} - {1}")]
+    GameSession(String, String),
 }
 
 impl IntoResponse for ServerError {
@@ -77,6 +83,14 @@ impl IntoResponse for ServerError {
             }
             ServerError::Json(e) => {
                 error!("Json error: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, String::new())
+            }
+            ServerError::RwLock(e) => {
+                error!("Read-write lock error: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, String::new())
+            }
+            ServerError::GameSession(game, e) => {
+                error!("Game session error: {} - {}", game, e);
                 (StatusCode::INTERNAL_SERVER_ERROR, String::new())
             }
         }
