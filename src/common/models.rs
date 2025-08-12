@@ -1,6 +1,8 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Hash)]
 pub enum GameCategory {
     #[serde(rename(deserialize = "warm_up"))]
     Warmup,
@@ -14,4 +16,33 @@ pub enum GameCategory {
     Ladies,
     #[serde(rename(deserialize = "boys"))]
     Boys,
+}
+
+#[derive(Debug, Serialize, Deserialize, Hash)]
+pub enum GameType {
+    Quiz,
+    Spinner,
+}
+
+// TODO - Move?
+#[derive(Debug, Serialize, Deserialize, Hash)]
+pub struct PagedRequest {
+    game_type: GameType,
+    query: Option<String>,
+    category: Option<GameCategory>,
+    page_num: u32,
+}
+
+impl PagedRequest {
+    pub fn generate_hash(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
+}
+
+// TODO - Move?
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PagedResponse {
+    //
 }

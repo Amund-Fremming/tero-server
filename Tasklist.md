@@ -86,52 +86,13 @@
 
 ---
 
-## Modelling
+## Models not implemented
 
-- user
-    - id (PK)
-    - pseudo_id
-    - auth0_id (nullable)
-    - user_type (enum: admin, guest, persistent)
-    - last_active 
-    - last_updated (nullable)
-    - name (nullable)
-    - email (nullable)
-    - age (nullable)
+- audit
+    - severity
+    - action
+    - trace ?
 
-- quiz
-    - id (PK)
-    - name
-    - description
-    - iterations
-    - current_iteration
-
-- question
-    - id (PK)
-    - quiz_id (FK)
-    - body
-
-- spinner
-    - id (PK)
-    - name
-    - description
-    - iterations
-    - current_iteration
-
-- round
-    - id (PK) 
-    - host_id
-    - participants
-    - read_before (flag)
-    - body
-
-- spinner_user
-    - id (PK)
-    - spinner_id (FK)
-    - user_id (FK)
-    - times_choosen
-
-???????????????
 - user_game_relation
     - id (PK)
     - user_id (FK)

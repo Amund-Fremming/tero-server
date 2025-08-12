@@ -1,5 +1,7 @@
 mod app_state;
-mod cache;
+mod game_cache;
+mod query_cache;
 
 pub use app_state::*;
-pub use cache::*;
+pub use game_cache::*;
+pub use query_cache::*;

@@ -28,7 +28,7 @@ impl<T> GameCache<T> {
         let map = self
             .games
             .write()
-            .map_err(|_| ServerError::RwLock("Failed to open read lock".into()))?;
+            .map_err(|_| ServerError::RwLock("Failed to open read lock on game cache".into()))?;
 
         let session = map
             .get(&id)
@@ -37,12 +37,15 @@ impl<T> GameCache<T> {
         Ok(read_fn(session))
     }
 
-    pub fn write<F>(&mut self, id: &Uuid, mut write_fn: F) -> Result<(), ServerError>
+    pub fn write<F>(&self, id: &Uuid, mut write_fn: F) -> Result<(), ServerError>
     where
         F: FnMut(&mut T),
     {
         let mut map = self.games.write().map_err(|_| {
-            ServerError::GameSession("Quiz".into(), "Failed to open write lock".into())
+            ServerError::GameSession(
+                "Quiz".into(),
+                "Failed to open write lock on game cache".into(),
+            )
         })?;
 
         let session = map
@@ -53,50 +56,4 @@ impl<T> GameCache<T> {
 
         Ok(())
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ListPageCache<T> {
-    page: RwLock<Vec<T>>,
-}
-
-impl<T> ListPageCache<T> {
-    pub fn new() -> Self {
-        Self {
-            page: RwLock::new(Vec::new()),
-        }
-    }
-
-    /*
-    Not in cache
-        hit db
-        insert into cache
-        return data
-
-    In cache
-        reset timeout
-        return data
-
-     */
-
-    /*
-    Page needs
-        incremental browsing (handled)
-        filtered by category
-        filtered by most played
-        search
-
-    Sol 1
-        map paged_request to the page result
-        handles different complex queries
-        needs to inject new entries into cache on creation
-        could also be valid for searching if query in in paged_request
-        generate a hash key for the object incomming
-
-    Sol 2
-        Only cache incremental browsing
-        no cache for complex filtering
-        only refreshes cache if page is not in cache or page is under 20 items
-
-     */
 }
