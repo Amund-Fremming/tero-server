@@ -51,3 +51,16 @@ impl SpinnerPlayer {
         self.times_choosen = self.times_choosen + 1;
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SpinnerSession {
+    // metadata
+    // players
+    // rounds
+}
+
+impl SpinnerSession {
+    pub fn new() -> Self {
+        Self {}
+    }
+}

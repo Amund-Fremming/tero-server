@@ -46,12 +46,12 @@
 - [x] Permission checks for endpoints
 - [x] Maybe update endpoints to require user id for fetching users, targeting query on id, not auth0_id or guest_id. this also makes it possible for admins to query users 
 - [ ] Update user sync from backend to auth0 (daily job/trigger)
+- [ ] Sync on registered user creation, needs to deactivate/delete the guest user
+- [ ] Sync for when a user gets admin permissions, needs to update user type
 
 **Cache**
-- [x] Implement a cache for Quiz 
-- [ ] Implement a cache for Spinner 
-- [ ] Implement a cache for Quiz search pages
-- [ ] Implement a cache for Spinner search pages
+- [x] Implement a generic cache wrapper and implementation for DRY principle for future games and caches
+- [ ] Implement a generic cache for game search pages
 
 **WebSocket**
 - [ ] Add websocket support
@@ -75,6 +75,11 @@
 - [ ] Enums for action and ceverity
 - [ ] Implement and SQL migration
 - [ ] Add audit logs where neccesarry
+
+**Consents**
+- [ ] Make it a static table / json file loaded from startup
+- [ ] Use a bitmap for storing consents on the user profile rather than a own table for lookups (No need for realations and joins)
+- [ ] Push notifications/alterts/mail?/sms?
 
 ---
 

@@ -4,30 +4,30 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{
-    error::ServerError,
-    quiz::QuizSession,
-    spinner::{Round, Spinner, SpinnerPlayer},
-};
+use crate::{error::ServerError, quiz::QuizSession, spinner::SpinnerSession};
 
-pub static ACTIVE_QUIZ_CACHE: Lazy<ActiveQuizGames> = Lazy::new(|| ActiveQuizGames::new());
-pub static ACTIVE_SPINNER_CACHE: Lazy<ActiveQuizGames> = Lazy::new(|| ActiveQuizGames::new());
+pub static ACTIVE_QUIZ_CACHE: Lazy<GameCache<QuizSession>> = Lazy::new(|| GameCache::new());
+pub static ACTIVE_SPINNER_CACHE: Lazy<GameCache<SpinnerSession>> = Lazy::new(|| GameCache::new());
+
+pub trait GameSession {}
+impl GameSession for SpinnerSession {}
+impl GameSession for QuizSession {}
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ActiveQuizGames {
-    games: RwLock<HashMap<Uuid, QuizSession>>,
+pub struct GameCache<T> {
+    pub games: RwLock<HashMap<Uuid, T>>,
 }
 
-impl ActiveQuizGames {
+impl<T> GameCache<T> {
     pub fn new() -> Self {
         Self {
             games: RwLock::new(HashMap::new()),
         }
     }
 
-    pub fn read<F, R>(&mut self, id: Uuid, read_fn: F) -> Result<R, ServerError>
+    pub fn read<F, R>(&self, id: &Uuid, read_fn: F) -> Result<R, ServerError>
     where
-        F: FnOnce(&QuizSession) -> R,
+        F: FnOnce(&T) -> R,
     {
         let map = self
             .games
@@ -41,9 +41,9 @@ impl ActiveQuizGames {
         Ok(read_fn(session))
     }
 
-    pub fn write<F>(&mut self, id: Uuid, mut write_fn: F) -> Result<(), ServerError>
+    pub fn write<F>(&mut self, id: &Uuid, mut write_fn: F) -> Result<(), ServerError>
     where
-        F: FnMut(&mut QuizSession),
+        F: FnMut(&mut T),
     {
         let mut map = self.games.write().map_err(|_| {
             ServerError::GameSession("Quiz".into(), "Failed to open write lock".into())
@@ -54,26 +54,7 @@ impl ActiveQuizGames {
             .ok_or_else(|| ServerError::GameSession("Quiz".into(), "Does not exist".into()))?;
 
         write_fn(session);
+
         Ok(())
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SpinnerSession {
-    game: Spinner,
-    rounds: Vec<Round>,
-    players: Vec<SpinnerPlayer>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ActiveSpinnerGames {
-    games: RwLock<HashMap<u32, Spinner>>,
-}
-
-impl ActiveSpinnerGames {
-    pub fn new() -> Self {
-        Self {
-            games: RwLock::new(HashMap::new()),
-        }
     }
 }
