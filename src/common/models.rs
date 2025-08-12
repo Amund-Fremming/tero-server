@@ -24,11 +24,8 @@ pub enum GameType {
     Spinner,
 }
 
-// TODO - Move?
 #[derive(Debug, Serialize, Deserialize, Hash)]
 pub struct PagedRequest {
-    game_type: GameType,
-    query: Option<String>,
     category: Option<GameCategory>,
     page_num: u32,
 }
@@ -41,8 +38,16 @@ impl PagedRequest {
     }
 }
 
-// TODO - Move?
+#[derive(Debug, Serialize, Deserialize)]
+struct GameBase {
+    id: i32,
+    name: String,
+    description: Option<String>,
+    category: GameCategory,
+    iterations: i32,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PagedResponse {
-    //
+    games: Vec<GameBase>,
 }

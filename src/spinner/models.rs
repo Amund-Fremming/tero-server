@@ -5,7 +5,7 @@ use crate::common::GameCategory;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Spinner {
-    id: Uuid,
+    id: i32,
     host_id: i32,
     name: String,
     description: Option<String>,

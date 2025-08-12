@@ -1,12 +1,9 @@
 # Tasklist
 
-## Left off
-
-- Generic helper function to read/write to cache
-- Generic fn to hold data for cache, dont need multiple objects, only a wrapper
-
 ## Thoughts
 
+- Cleanup ids: - some are uuid some are i32, and fix indexes to these if they are uuid
+- Cleanup user id: - user has many ids now, decide on one sort.
 - Split the fn get_subject_and_permissins into two fn, SRP
 
 ## Tasklist
@@ -51,7 +48,13 @@
 
 **Cache**
 - [x] Implement a generic cache wrapper and implementation for DRY principle for future games and caches
-- [ ] Implement a generic cache for game search pages
+- [x] Implement a generic cache for game search pages
+- [ ] Expand search cache to support passing in functions to handle when its a cache miss
+- [ ] Tests to verify that the cache works
+
+**Generic feature**
+- [ ] Typed search in a handler
+- [ ] GenericGameService with GetGame, Typed Search
 
 **WebSocket**
 - [ ] Add websocket support

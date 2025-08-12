@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    hash::{DefaultHasher, Hash, Hasher},
-    sync::RwLock,
-};
+use std::{collections::HashMap, sync::RwLock};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -80,6 +76,11 @@ impl<T: Clone> PagedCache<T> {
     }
 
     /*
+    Iteration 2
+        needs a page search service
+        pass in a service function to be executed if no cache hit
+        incapsulate cache logic inside cache file
+
     Cache
         hash_key -> (arr of 20 T, timestamp)
 
