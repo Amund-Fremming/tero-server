@@ -11,6 +11,7 @@ pub struct Quiz {
     description: Option<String>,
     category: GameCategory,
     iterations: i32,
+    times_played: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -33,11 +34,12 @@ pub struct QuizSession {
     name: String,
     description: Option<String>,
     category: Option<GameCategory>,
-    iterations: i8,
-    current_iteration: i8,
+    iterations: u8,
+    current_iteration: u8,
     questions: Vec<String>,
 }
 
+// Only used for a new game, when stored to the db
 impl Into<Quiz> for QuizSession {
     fn into(self) -> Quiz {
         Quiz {
@@ -46,6 +48,7 @@ impl Into<Quiz> for QuizSession {
             description: self.description,
             category: self.category.unwrap_or(GameCategory::Casual),
             iterations: self.iterations.into(),
+            times_played: 0,
         }
     }
 }

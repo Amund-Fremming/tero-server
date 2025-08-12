@@ -10,8 +10,8 @@ pub struct Spinner {
     name: String,
     description: Option<String>,
     category: GameCategory,
-    iterations: u8,
-    current_iteration: u8,
+    iterations: i32,
+    times_played: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

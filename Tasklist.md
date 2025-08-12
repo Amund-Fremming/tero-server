@@ -81,6 +81,9 @@
 - [ ] Use a bitmap for storing consents on the user profile rather than a own table for lookups (No need for realations and joins)
 - [ ] Push notifications/alterts/mail?/sms?
 
+**Cleanup/refactor**
+- [ ] Better handling for ServerErrors (Rows not affected, cache error)
+
 ---
 
 ## Modelling
