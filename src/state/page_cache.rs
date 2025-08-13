@@ -1,8 +1,9 @@
-use std::{collections::HashMap, sync::RwLock};
+use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 
 use crate::{common::PagedRequest, error::ServerError, quiz::Quiz, spinner::Spinner};
 
@@ -15,7 +16,7 @@ pub struct CacheEntry<T: Clone> {
     page: Vec<T>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct PagedCache<T: Clone> {
     cache: RwLock<HashMap<u64, CacheEntry<T>>>,
 }
@@ -32,11 +33,7 @@ impl<T: Clone> PagedCache<T> {
         F: AsyncFnOnce() -> Result<Vec<T>, ServerError>,
     {
         let key = req.generate_hash();
-
-        let mut map = self
-            .cache
-            .write()
-            .map_err(|_| ServerError::RwLock("Failed to open read lock on page cache".into()))?;
+        let mut map = self.cache.write().await;
 
         let offset = chrono::Duration::minutes(10);
         if let Some(entry) = map.get_mut(&key) {
@@ -54,11 +51,7 @@ impl<T: Clone> PagedCache<T> {
             timestamp: Utc::now(),
         };
 
-        let mut map = self
-            .cache
-            .write()
-            .map_err(|_| ServerError::RwLock("Failed to open read lock on page cache".into()))?;
-
+        let mut map = self.cache.write().await;
         map.insert(key, entry.clone());
 
         Ok(entry.page)

@@ -16,6 +16,7 @@ use crate::{
     state::{AppState, QUIZ_PAGE_CACHE, SPINNER_PAGE_CACHE},
 };
 
+#[axum::debug_handler]
 pub async fn typed_search(
     State(state): State<Arc<AppState>>,
     Path(game_type): Path<GameType>,
