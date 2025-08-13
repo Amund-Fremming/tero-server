@@ -28,17 +28,17 @@ CREATE TABLE "user" (
 );
 
 CREATE TABLE "quiz" (
-    "id" SERIAL PRIMARY KEY,
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     "name" VARCHAR(100) NOT NULL,
     "description" VARCHAR(150),
     "category" game_category NOT NULL DEFAULT 'casual',
     "iterations" INTEGER NOT NULL DEFAULT 0,
-    "times_played": INTEGER NOT NULL DEFAULT 0
+    "times_played" INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE "question" (
     "id" SERIAL PRIMARY KEY,
-    "quiz_id" INTEGER NOT NULL,
+    "quiz_id" UUID NOT NULL,
     "title" VARCHAR(200)
 );
 
@@ -49,8 +49,7 @@ CREATE TABLE "spinner" (
     "description" VARCHAR(150),
     "category" game_category NOT NULL DEFAULT 'casual',
     "iterations" INTEGER NOT NULL DEFAULT 0,
-    "current_iteration" INTEGER NOT NULL DEFAULT 0,
-    "times_played": INTEGER NOT NULL DEFAULT 0
+    "times_played" INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE "round" (

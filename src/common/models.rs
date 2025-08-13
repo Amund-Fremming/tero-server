@@ -2,7 +2,8 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Hash)]
+#[derive(Debug, Serialize, Deserialize, Hash, sqlx::Type)]
+#[sqlx(type_name = "game_category", rename_all = "lowercase")]
 pub enum GameCategory {
     #[serde(rename(deserialize = "warm_up"))]
     Warmup,

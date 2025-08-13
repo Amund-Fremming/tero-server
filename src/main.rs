@@ -11,6 +11,7 @@ use tracing_subscriber::FmtSubscriber;
 
 use crate::{
     auth::{protected_auth_routes, public_auth_routes},
+    common::common_routes,
     health::health_routes,
     mw::{auth_mw, request_mw},
     state::AppState,
@@ -60,7 +61,8 @@ async fn main() {
     // Initialize routes
     let public_routes = Router::new()
         .nest("/health", health_routes())
-        .nest("/guest-user", public_auth_routes(state.clone()));
+        .nest("/guest-user", public_auth_routes(state.clone()))
+        .nest("/games", common_routes(state.clone()));
 
     let protected_routes = Router::new()
         .nest("/user", protected_auth_routes(state.clone()))

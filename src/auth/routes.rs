@@ -16,7 +16,7 @@ use crate::{
 pub fn public_auth_routes(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/", post(create_guest_user))
-        .with_state(state.clone())
+        .with_state(state)
 }
 
 pub fn protected_auth_routes(state: Arc<AppState>) -> Router {
@@ -30,5 +30,5 @@ pub fn protected_auth_routes(state: Arc<AppState>) -> Router {
         )
         .route("/list", get(list_all_users))
         .route("/activity/{user_id}", put(patch_user_activity))
-        .with_state(state.clone())
+        .with_state(state)
 }

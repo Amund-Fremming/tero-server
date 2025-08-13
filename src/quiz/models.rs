@@ -4,14 +4,14 @@ use uuid::Uuid;
 
 use crate::common::GameCategory;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Quiz {
-    id: i32,
-    name: String,
-    description: Option<String>,
-    category: GameCategory,
-    iterations: i32,
-    times_played: i32,
+    pub id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub category: GameCategory,
+    pub iterations: i32,
+    pub times_played: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,7 +21,7 @@ pub struct CreateQuizRequest {
     category: Option<GameCategory>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Question {
     id: i32,
     quiz_id: i32,
@@ -33,7 +33,7 @@ pub struct QuizSession {
     id: Uuid,
     name: String,
     description: Option<String>,
-    category: Option<GameCategory>,
+    category: GameCategory,
     iterations: u8,
     current_iteration: u8,
     questions: Vec<String>,
@@ -43,10 +43,10 @@ pub struct QuizSession {
 impl Into<Quiz> for QuizSession {
     fn into(self) -> Quiz {
         Quiz {
-            id: 0,
+            id: Uuid::new_v4(),
             name: self.name,
             description: self.description,
-            category: self.category.unwrap_or(GameCategory::Casual),
+            category: self.category,
             iterations: self.iterations.into(),
             times_played: 0,
         }
@@ -54,15 +54,27 @@ impl Into<Quiz> for QuizSession {
 }
 
 impl QuizSession {
-    pub fn new(req: CreateQuizRequest) -> Self {
+    pub fn from_request(req: CreateQuizRequest) -> Self {
         Self {
             id: Uuid::new_v4(),
             name: req.name,
             description: req.description,
-            category: req.category,
+            category: req.category.unwrap_or(GameCategory::Casual),
             iterations: 0,
             current_iteration: 0,
             questions: Vec::new(),
+        }
+    }
+
+    pub fn from_db(quiz: Quiz, mut questions: Vec<Question>) -> Self {
+        Self {
+            id: quiz.id,
+            name: quiz.name,
+            description: quiz.description,
+            category: quiz.category,
+            iterations: u8::try_from(quiz.iterations).ok().unwrap(),
+            current_iteration: 0,
+            questions: questions.iter_mut().map(|q| q.title.clone()).collect(),
         }
     }
 

@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::common::GameCategory;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Spinner {
     id: i32,
     host_id: i32,
@@ -22,11 +22,11 @@ pub struct CreateSpinnerRequest {
     category: Option<GameCategory>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Round {
     id: Uuid,
     spinner_id: i32,
-    participants: u8,
+    participants: i32,
     read_before: bool,
     title: String,
 }
@@ -60,7 +60,13 @@ pub struct SpinnerSession {
 }
 
 impl SpinnerSession {
-    pub fn new() -> Self {
+    pub fn from_request(req: CreateSpinnerRequest) -> Self {
+        todo!();
+        Self {}
+    }
+
+    pub fn from_db(spinner: Spinner, rounds: Vec<Round>) -> Self {
+        todo!();
         Self {}
     }
 }

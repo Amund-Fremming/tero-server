@@ -1,5 +1,8 @@
 # Tasklist
 
+## Messy
+- quiz models, many impl methods (consider using a service)
+
 ## Thoughts
 
 - Cleanup ids: - some are uuid some are i32, and fix indexes to these if they are uuid
@@ -53,8 +56,8 @@
 - [ ] Tests to verify that the cache works
 
 **Generic feature**
-- [ ] Typed search in a handler
-- [ ] GenericGameService with GetGame, Typed Search
+- [x] Typed search in a handler
+- [x] GenericGameService with GetGame, Typed Search
 
 **WebSocket**
 - [ ] Add websocket support
