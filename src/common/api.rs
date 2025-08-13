@@ -9,7 +9,7 @@ use reqwest::StatusCode;
 use uuid::Uuid;
 
 use crate::{
-    common::{GameType, PagedRequest},
+    common::{GameApiWrapper, GameType, PagedRequest},
     error::ServerError,
     quiz::{get_quiz_page, get_quiz_session_by_id},
     spinner::{get_spinner_page, get_spinner_session_by_id},
@@ -37,14 +37,16 @@ pub async fn get_game_session_by_id(
     State(state): State<Arc<AppState>>,
     Path((game_type, game_id)): Path<(GameType, Uuid)>,
 ) -> Result<impl IntoResponse, ServerError> {
-    match game_type {
+    let wrapper = match game_type {
         GameType::Quiz => {
             let game = get_quiz_session_by_id(state.get_pool(), &game_id).await?;
-            Ok((StatusCode::OK, Json(game)))
+            GameApiWrapper::Quiz(game)
         }
         GameType::Spinner => {
             let game = get_spinner_session_by_id(state.get_pool(), &game_id).await?;
-            Ok((StatusCode::OK, Json(game)))
+            GameApiWrapper::Spinner(game)
         }
-    }
+    };
+
+    Ok((StatusCode::OK, Json(wrapper)))
 }

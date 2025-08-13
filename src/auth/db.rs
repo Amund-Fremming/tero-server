@@ -150,12 +150,12 @@ pub async fn patch_user_by_id(
 }
 
 pub async fn delete_user_by_id(pool: &Pool<Postgres>, user_id: i32) -> Result<(), ServerError> {
-    let result = query!(
+    let result = query(
         r#"
         DELETE FROM "user" WHERE id = $1;
         "#,
-        user_id
     )
+    .bind(user_id)
     .execute(pool)
     .await?;
 

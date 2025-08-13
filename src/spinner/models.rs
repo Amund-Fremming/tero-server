@@ -5,13 +5,13 @@ use crate::common::GameCategory;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Spinner {
-    id: i32,
-    host_id: i32,
-    name: String,
-    description: Option<String>,
-    category: GameCategory,
-    iterations: i32,
-    times_played: i32,
+    pub id: Uuid,
+    pub host_id: i32,
+    pub name: String,
+    pub description: Option<String>,
+    pub category: GameCategory,
+    pub iterations: i32,
+    pub times_played: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

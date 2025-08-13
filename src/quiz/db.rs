@@ -2,7 +2,7 @@ use sqlx::{Pool, Postgres, query_as};
 use uuid::Uuid;
 
 use crate::{
-    common::PagedRequest,
+    common::{PagedRequest, PagedResponse},
     error::ServerError,
     quiz::{Question, Quiz, QuizSession},
 };
@@ -44,6 +44,25 @@ pub async fn get_quiz_session_by_id(
 pub async fn get_quiz_page(
     pool: &Pool<Postgres>,
     req: &PagedRequest,
-) -> Result<QuizSession, ServerError> {
-    todo!();
+) -> Result<PagedResponse, ServerError> {
+    let mut sql = String::from(
+        r#"
+        SELECT id, name, description, category, iterations, times_played
+        FROM quiz
+        "#,
+    );
+
+    let mut query = Vec::new();
+    let offset = 20 * req.page_num;
+    let limit = 20;
+
+    if let Some(category) = &req.category {
+        query.push(format!(" category = '{}'", category.as_str()));
+    };
+
+    query.push(format!("LIMIT {} OFFSET {} ", limit, offset));
+    sql.push_str(format!("WHERE {}", query.join(" AND ")).as_str());
+    let games = sqlx::query_as::<_, Quiz>(&sql).fetch_all(pool).await?;
+
+    Ok(PagedResponse::from_quizzes(games))
 }

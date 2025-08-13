@@ -2,9 +2,8 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    common::PagedRequest,
+    common::{PagedRequest, PagedResponse},
     error::ServerError,
-    quiz::QuizSession,
     spinner::{Round, Spinner, SpinnerSession},
 };
 
@@ -46,6 +45,25 @@ pub async fn get_spinner_session_by_id(
 pub async fn get_spinner_page(
     pool: &Pool<Postgres>,
     req: &PagedRequest,
-) -> Result<QuizSession, ServerError> {
-    todo!()
+) -> Result<PagedResponse, ServerError> {
+    let mut sql = String::from(
+        r#"
+        SELECT id, host_id, name, description, category, iterations, times_played
+        FROM spinner
+        "#,
+    );
+
+    let mut query = Vec::new();
+    let offset = 20 * req.page_num;
+    let limit = 20;
+
+    if let Some(category) = &req.category {
+        query.push(format!(" category = '{}'", category.as_str()));
+    }
+
+    query.push(format!("LIMIT {} OFFSET {}", limit, offset));
+    sql.push_str(format!("WHERE {}", query.join(" AND ")).as_str());
+    let spinners = sqlx::query_as::<_, Spinner>(&sql).fetch_all(pool).await?;
+
+    Ok(PagedResponse::from_spinners(spinners))
 }
