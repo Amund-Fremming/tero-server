@@ -1,14 +1,18 @@
 use std::{collections::HashMap, sync::RwLock};
 
 use chrono::{DateTime, Utc};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
-use crate::{common::PagedRequest, error::ServerError};
+use crate::{common::PagedRequest, error::ServerError, quiz::Quiz, spinner::Spinner};
+
+pub static QUIZ_PAGE_CACHE: Lazy<PagedCache<Quiz>> = Lazy::new(|| PagedCache::new());
+pub static SPINNER_PAGE_CACHE: Lazy<PagedCache<Spinner>> = Lazy::new(|| PagedCache::new());
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct CacheEntry<T: Clone> {
+pub struct CacheEntry<T: Clone> {
     pub timestamp: DateTime<Utc>,
-    page: [T; 20],
+    page: Vec<T>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -23,74 +27,40 @@ impl<T: Clone> PagedCache<T> {
         }
     }
 
-    pub fn try_get(&self, req: &PagedRequest) -> Result<Option<CacheEntry<T>>, ServerError> {
+    pub async fn get<F>(&self, req: &PagedRequest, db_fn: F) -> Result<Vec<T>, ServerError>
+    where
+        F: AsyncFnOnce() -> Result<Vec<T>, ServerError>,
+    {
         let key = req.generate_hash();
 
-        let map = self
+        let mut map = self
             .cache
-            .read()
+            .write()
             .map_err(|_| ServerError::RwLock("Failed to open read lock on page cache".into()))?;
 
-        let entry = match map.get(&key).cloned() {
-            Some(entry) => entry,
-            None => return Ok(None),
-        };
-
         let offset = chrono::Duration::minutes(10);
-        if entry.timestamp + offset < Utc::now() {
-            return Ok(None);
+        if let Some(entry) = map.get_mut(&key) {
+            if entry.timestamp + offset > Utc::now() {
+                entry.timestamp = Utc::now();
+            }
         };
 
-        self.update_timestamp(&key)?;
-        Ok(Some(entry))
-    }
+        // Release lock while db operation finishes
+        drop(map);
 
-    fn update_timestamp(&self, key: &u64) -> Result<(), ServerError> {
-        let mut map = self
-            .cache
-            .write()
-            .map_err(|_| ServerError::RwLock("Failed to open write lock on page cache".into()))?;
-
-        if let Some(entry) = map.get_mut(key) {
-            entry.timestamp = Utc::now();
-        };
-
-        Ok(())
-    }
-
-    pub fn insert(&self, req: &PagedRequest, page: [T; 20]) -> Result<(), ServerError> {
-        let key = req.generate_hash();
-
-        let mut map = self
-            .cache
-            .write()
-            .map_err(|_| ServerError::RwLock("Failed to open write lock on page cache".into()))?;
-
-        let cache_entry = CacheEntry {
+        let entries = db_fn().await?;
+        let entry = CacheEntry {
+            page: entries,
             timestamp: Utc::now(),
-            page,
         };
 
-        map.insert(key, cache_entry);
-        Ok(())
+        let mut map = self
+            .cache
+            .write()
+            .map_err(|_| ServerError::RwLock("Failed to open read lock on page cache".into()))?;
+
+        map.insert(key, entry.clone());
+
+        Ok(entry.page)
     }
-
-    /*
-    Iteration 2
-        needs a page search service
-        pass in a service function to be executed if no cache hit
-        incapsulate cache logic inside cache file
-
-    Cache
-        hash_key -> (arr of 20 T, timestamp)
-
-    Not in cache
-        hit db
-        insert into cache
-        return data
-
-    In cache
-        reset timeout
-        return data
-        */
 }

@@ -1,5 +1,9 @@
 # Tasklist
 
+## Left off
+- Messy paged cache, maybe just return paged response
+- Maybe just store pagedREsponse in cache instead of cacheentry, or use this as the page in cache entry
+
 ## Messy
 - quiz models, many impl methods (consider using a service)
 

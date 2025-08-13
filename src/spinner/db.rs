@@ -45,7 +45,7 @@ pub async fn get_spinner_session_by_id(
 pub async fn get_spinner_page(
     pool: &Pool<Postgres>,
     req: &PagedRequest,
-) -> Result<PagedResponse, ServerError> {
+) -> Result<Vec<Spinner>, ServerError> {
     let mut sql = String::from(
         r#"
         SELECT id, host_id, name, description, category, iterations, times_played
@@ -65,5 +65,5 @@ pub async fn get_spinner_page(
     sql.push_str(format!("WHERE {}", query.join(" AND ")).as_str());
     let spinners = sqlx::query_as::<_, Spinner>(&sql).fetch_all(pool).await?;
 
-    Ok(PagedResponse::from_spinners(spinners))
+    Ok(spinners)
 }

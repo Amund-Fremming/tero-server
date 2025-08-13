@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::common::GameCategory;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct Spinner {
     pub id: Uuid,
     pub host_id: i32,

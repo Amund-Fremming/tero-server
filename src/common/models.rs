@@ -8,7 +8,7 @@ use crate::{
     spinner::{Spinner, SpinnerSession},
 };
 
-#[derive(Debug, Serialize, Deserialize, Hash, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Hash, Clone, sqlx::Type)]
 #[sqlx(type_name = "game_category", rename_all = "lowercase")]
 pub enum GameCategory {
     #[serde(rename(deserialize = "warm_up"))]

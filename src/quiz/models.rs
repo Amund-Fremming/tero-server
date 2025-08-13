@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::common::GameCategory;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct Quiz {
     pub id: Uuid,
     pub name: String,
