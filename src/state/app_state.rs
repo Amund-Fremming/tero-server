@@ -1,16 +1,19 @@
 use std::sync::Arc;
 
+use gustcache::GustCache;
 use reqwest::Client;
 use serde::Deserialize;
 use sqlx::{Pool, Postgres};
 use tracing::info;
 
-use crate::{AUTH0_DOMAIN, error::ServerError};
+use crate::{AUTH0_DOMAIN, error::ServerError, quiz::Quiz, spinner::Spinner};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AppState {
     pool: Pool<Postgres>,
     jwks: Jwks,
+    quiz_cache: GustCache<Vec<Quiz>>,
+    spin_cache: GustCache<Vec<Spinner>>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -38,8 +41,15 @@ impl AppState {
         let response = Client::new().get(url).send().await?;
         info!("JWKs Response: {}", response.status());
         let jwks = response.json::<Jwks>().await?;
+        let quiz_cache = GustCache::from_ttl(chrono::Duration::minutes(2));
+        let spin_cache = GustCache::from_ttl(chrono::Duration::minutes(2));
 
-        let state = Arc::new(Self { pool, jwks });
+        let state = Arc::new(Self {
+            pool,
+            jwks,
+            quiz_cache,
+            spin_cache,
+        });
 
         Ok(state)
     }
@@ -50,5 +60,13 @@ impl AppState {
 
     pub fn get_jwks(&self) -> &Jwks {
         &self.jwks
+    }
+
+    pub fn get_quiz_cache(&self) -> &GustCache<Vec<Quiz>> {
+        &self.quiz_cache
+    }
+
+    pub fn get_spin_cache(&self) -> &GustCache<Vec<Spinner>> {
+        &self.spin_cache
     }
 }

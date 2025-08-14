@@ -38,6 +38,9 @@ pub enum ServerError {
 
     #[error("Game session error: {0} - {1}")]
     GameSession(String, String),
+
+    #[error("Gust Cache error: {0}")]
+    Cache(#[from] gustcache::CacheError),
 }
 
 impl IntoResponse for ServerError {
@@ -91,6 +94,10 @@ impl IntoResponse for ServerError {
             }
             ServerError::GameSession(game, e) => {
                 error!("Game session error: {} - {}", game, e);
+                (StatusCode::INTERNAL_SERVER_ERROR, String::new())
+            }
+            ServerError::Cache(e) => {
+                error!("Gust Cache error: {}", e);
                 (StatusCode::INTERNAL_SERVER_ERROR, String::new())
             }
         }
