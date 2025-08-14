@@ -10,9 +10,19 @@ use tokio::sync::RwLock;
 
 use crate::{error::ServerError, quiz::Quiz, spinner::Spinner};
 
-// Move out maybe?, create a func that returns these lazy functions
-pub static QUIZ_PAGE_CACHE: Lazy<MemoryCache<Quiz>> = Lazy::new(|| MemoryCache::new());
-pub static SPINNER_PAGE_CACHE: Lazy<MemoryCache<Spinner>> = Lazy::new(|| MemoryCache::new());
+/*
+    TODO
+        - expand new fn to take in option for time
+        - invalidate cache fn
+        - maybe a fn for insert, get, invalidate sinlge entry?
+        - split this into own repo
+        - rename memory cache
+*/
+
+pub static QUIZ_PAGE_CACHE: Lazy<MemoryCache<Vec<Quiz>>> =
+    Lazy::new(|| MemoryCache::new(chrono::Duration::minutes(5)));
+pub static SPINNER_PAGE_CACHE: Lazy<MemoryCache<Vec<Spinner>>> =
+    Lazy::new(|| MemoryCache::new(chrono::Duration::minutes(5)));
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CacheEntry<T: Clone> {
@@ -23,12 +33,14 @@ pub struct CacheEntry<T: Clone> {
 #[derive(Debug)]
 pub struct MemoryCache<T: Clone> {
     cache: RwLock<HashMap<u64, CacheEntry<T>>>,
+    ttl: chrono::TimeDelta,
 }
 
 impl<T: Clone> MemoryCache<T> {
-    pub fn new() -> Self {
+    pub fn new(ttl: chrono::TimeDelta) -> Self {
         Self {
             cache: RwLock::new(HashMap::new()),
+            ttl,
         }
     }
 
@@ -49,9 +61,8 @@ impl<T: Clone> MemoryCache<T> {
         let key = self.generate_hash(req);
         let mut map = self.cache.write().await;
 
-        let offset = chrono::Duration::minutes(10);
         if let Some(entry) = map.get_mut(&key) {
-            if entry.timestamp + offset > Utc::now() {
+            if entry.timestamp + self.ttl > Utc::now() {
                 entry.timestamp = Utc::now();
             }
         };
