@@ -2,16 +2,16 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    common::{PagedRequest, PagedResponse},
+    common::PagedRequest,
     error::ServerError,
-    spinner::{Round, Spinner, SpinnerSession},
+    spin::{Round, Spin, SpinSession},
 };
 
-pub async fn get_spinner_session_by_id(
+pub async fn get_spin_session_by_id(
     pool: &Pool<Postgres>,
     spinner_id: &Uuid,
-) -> Result<SpinnerSession, ServerError> {
-    let spinner = sqlx::query_as::<_, Spinner>(
+) -> Result<SpinSession, ServerError> {
+    let spinner = sqlx::query_as::<_, Spin>(
         r#"
         SELECT id, host_id, name, description, category, iterations, times_played
         FROM spinner
@@ -37,15 +37,15 @@ pub async fn get_spinner_session_by_id(
     .fetch_all(pool)
     .await?;
 
-    let session = SpinnerSession::from_db(spinner, rounds);
+    let session = SpinSession::from_db(spinner, rounds);
 
     Ok(session)
 }
 
-pub async fn get_spinner_page(
+pub async fn get_spin_page(
     pool: &Pool<Postgres>,
     req: &PagedRequest,
-) -> Result<Vec<Spinner>, ServerError> {
+) -> Result<Vec<Spin>, ServerError> {
     let mut sql = String::from(
         r#"
         SELECT id, host_id, name, description, category, iterations, times_played
@@ -63,7 +63,7 @@ pub async fn get_spinner_page(
 
     query.push(format!("LIMIT {} OFFSET {}", limit, offset));
     sql.push_str(format!("WHERE {}", query.join(" AND ")).as_str());
-    let spinners = sqlx::query_as::<_, Spinner>(&sql).fetch_all(pool).await?;
+    let spinners = sqlx::query_as::<_, Spin>(&sql).fetch_all(pool).await?;
 
     Ok(spinners)
 }

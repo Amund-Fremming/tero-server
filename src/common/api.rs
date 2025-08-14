@@ -6,15 +6,23 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use reqwest::StatusCode;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    common::{GameApiWrapper, GameType, PagedRequest, PagedResponse},
+    common::{GameType, PagedRequest, PagedResponse},
     error::ServerError,
-    quiz::{get_quiz_page, get_quiz_session_by_id},
-    spinner::{get_spinner_page, get_spinner_session_by_id},
+    quiz::{QuizSession, get_quiz_page, get_quiz_session_by_id},
+    spin::{SpinSession, get_spin_page, get_spin_session_by_id},
     state::AppState,
 };
+
+#[serde(untagged)]
+#[derive(Debug, Serialize, Deserialize)]
+pub enum GameApiWrapper {
+    Quiz(QuizSession),
+    Spinner(SpinSession),
+}
 
 #[axum::debug_handler]
 pub async fn typed_search(
@@ -34,7 +42,7 @@ pub async fn typed_search(
         GameType::Spinner => {
             let spinners = state
                 .get_spin_cache()
-                .get(&request, || get_spinner_page(state.get_pool(), &request))
+                .get(&request, || get_spin_page(state.get_pool(), &request))
                 .await?;
 
             PagedResponse::from_spinners(spinners)
@@ -54,7 +62,7 @@ pub async fn get_game_session_by_id(
             GameApiWrapper::Quiz(game)
         }
         GameType::Spinner => {
-            let game = get_spinner_session_by_id(state.get_pool(), &game_id).await?;
+            let game = get_spin_session_by_id(state.get_pool(), &game_id).await?;
             GameApiWrapper::Spinner(game)
         }
     };

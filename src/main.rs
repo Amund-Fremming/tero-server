@@ -23,7 +23,7 @@ mod error;
 mod health;
 mod mw;
 mod quiz;
-mod spinner;
+mod spin;
 mod state;
 mod ws;
 

@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
     quiz::{Quiz, QuizSession},
-    spinner::{Spinner, SpinnerSession},
+    spin::{Spin, SpinSession},
 };
 
 #[derive(Debug, Serialize, Deserialize, Hash, Clone, sqlx::Type)]
@@ -50,14 +50,6 @@ pub struct PagedRequest {
     pub page_num: u32,
 }
 
-impl PagedRequest {
-    pub fn generate_hash(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.hash(&mut hasher);
-        hasher.finish()
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 struct GameBase {
     id: Uuid,
@@ -79,8 +71,8 @@ impl From<Quiz> for GameBase {
     }
 }
 
-impl From<Spinner> for GameBase {
-    fn from(value: Spinner) -> Self {
+impl From<Spin> for GameBase {
+    fn from(value: Spin) -> Self {
         Self {
             id: value.id,
             name: value.name,
@@ -103,16 +95,9 @@ impl PagedResponse {
         }
     }
 
-    pub fn from_spinners(spinners: Vec<Spinner>) -> Self {
+    pub fn from_spinners(spinners: Vec<Spin>) -> Self {
         Self {
             games: spinners.into_iter().map(|s| s.into()).collect(),
         }
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GameApiWrapper {
-    Quiz(QuizSession),
-    Spinner(SpinnerSession),
 }

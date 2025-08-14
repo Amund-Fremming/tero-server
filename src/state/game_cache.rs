@@ -4,10 +4,10 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{error::ServerError, quiz::QuizSession, spinner::SpinnerSession};
+use crate::{error::ServerError, quiz::QuizSession, spin::SpinSession};
 
 pub static ACTIVE_QUIZ_CACHE: Lazy<GameCache<QuizSession>> = Lazy::new(|| GameCache::new());
-pub static ACTIVE_SPINNER_CACHE: Lazy<GameCache<SpinnerSession>> = Lazy::new(|| GameCache::new());
+pub static ACTIVE_SPINNER_CACHE: Lazy<GameCache<SpinSession>> = Lazy::new(|| GameCache::new());
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameCache<T> {

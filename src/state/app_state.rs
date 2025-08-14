@@ -6,14 +6,14 @@ use serde::Deserialize;
 use sqlx::{Pool, Postgres};
 use tracing::info;
 
-use crate::{AUTH0_DOMAIN, error::ServerError, quiz::Quiz, spinner::Spinner};
+use crate::{AUTH0_DOMAIN, error::ServerError, quiz::Quiz, spin::Spin};
 
 #[derive(Debug)]
 pub struct AppState {
     pool: Pool<Postgres>,
     jwks: Jwks,
     quiz_cache: GustCache<Vec<Quiz>>,
-    spin_cache: GustCache<Vec<Spinner>>,
+    spin_cache: GustCache<Vec<Spin>>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -66,7 +66,7 @@ impl AppState {
         &self.quiz_cache
     }
 
-    pub fn get_spin_cache(&self) -> &GustCache<Vec<Spinner>> {
+    pub fn get_spin_cache(&self) -> &GustCache<Vec<Spin>> {
         &self.spin_cache
     }
 }
