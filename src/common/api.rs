@@ -13,7 +13,7 @@ use crate::{
     error::ServerError,
     quiz::{get_quiz_page, get_quiz_session_by_id},
     spinner::{get_spinner_page, get_spinner_session_by_id},
-    state::{AppState, QUIZ_PAGE_CACHE, SPINNER_PAGE_CACHE},
+    state::AppState,
 };
 
 #[axum::debug_handler]
@@ -24,14 +24,16 @@ pub async fn typed_search(
 ) -> Result<Response, ServerError> {
     let response = match game_type {
         GameType::Quiz => {
-            let quizzes = QUIZ_PAGE_CACHE
+            let quizzes = state
+                .get_quiz_cache()
                 .get(&request, || get_quiz_page(state.get_pool(), &request))
                 .await?;
 
             PagedResponse::from_quizzes(quizzes)
         }
         GameType::Spinner => {
-            let spinners = SPINNER_PAGE_CACHE
+            let spinners = state
+                .get_spin_cache()
                 .get(&request, || get_spinner_page(state.get_pool(), &request))
                 .await?;
 

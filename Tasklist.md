@@ -57,7 +57,7 @@
 - [x] Implement a generic cache wrapper and implementation for DRY principle for future games and caches
 - [x] Implement a generic cache for game search pages
 - [x] Expand search cache to support passing in functions to handle when its a cache miss
-- [ ] Move cache out in its own reusable crate for future use
+- [x] Move cache out in its own reusable crate for future use
 - [ ] Tests to verify that the cache works
 
 **Generic feature**
