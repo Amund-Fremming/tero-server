@@ -17,7 +17,7 @@ use crate::{
     state::AppState,
 };
 
-#[serde(untagged)]
+//#[serde(untagged)]
 #[derive(Debug, Serialize, Deserialize)]
 pub enum GameApiWrapper {
     Quiz(QuizSession),

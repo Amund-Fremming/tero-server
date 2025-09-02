@@ -14,6 +14,7 @@ pub struct AppState {
     jwks: Jwks,
     quiz_cache: GustCache<Vec<Quiz>>,
     spin_cache: GustCache<Vec<Spin>>,
+    //TODO ADD CACHE FOR SESSIONS
 }
 
 #[derive(Debug, Deserialize, Clone)]
