@@ -61,14 +61,19 @@
 - [x] Typed search in a handler
 - [x] GenericGameService with GetGame, Typed Search
 
-**WebSocket**
-- [ ] Add websocket support
-- [ ] Add handling for sending, recieving different payloads and broadcasting
-- [ ] Add handling for disconnects and connects
+**SignalR microservice**
+- [ ] Create C# project with signal installed
+- [ ] Create a http client for talking to rust
+- [ ] Create api in c# for consuming games from rust
+- [ ] Create or add a cache solution for storing game sessions
+- [ ] Add core game logic in c# project
 
-**Games**
-- [ ] Implement core logic
-- [ ] Only save game to disk when game is finished
+**Rust connection to microservice**
+- [ ] Create api in rust for consuming created games in db
+- [ ] Create client for talking to C#
+- [ ] Api for storing games to database from c#
+- [ ] Api for creation of game, send to c# and client
+- [ ] Api for game session creation, send to c# and client
 
 **UniversalService**
 - [ ] Pagination support
@@ -101,68 +106,9 @@
     - action
     - trace ?
 
-- user_game_relation
+- saved_games 
     - id (PK)
     - user_id (FK)
     - game_id (FK)
     - game_type (enum: spinner, quiz, ...)
     - saved
-
----
-
-## Architecure
-
-```md
-/tero_backend
-    /src
-        /spinner
-            service.rs
-            models.rs
-            game.rs
-            db.rs
-            handlers.rs
-            routes.rs
-            mod.rs
-        /quiz
-            service.rs
-            models.rs
-            game.rs
-            db.rs
-            handlers.rs
-            routes.rs
-            mod.rs
-        /auth (user)
-            mw.rs
-            service.rs
-            models.rs
-            db.rs
-            handlers.rs
-            routes.rs
-            mw.rs
-            mod.rs
-        /error
-            server_error.rs
-            api_error.rs
-            mod.rs
-        /state
-            cache.rs
-            app_state.rs
-            mod.rs
-        /common
-            models.rs
-            mod.rs
-        /admin
-            handlers.rs
-            service.rs
-            db.rs
-            mod.rs
-        /ws
-            handlers.rs
-            parsers.rs
-            mod.rs
-        /common
-            universal_game_service.rs
-            mod.rs
-        mw.rs
-        main.rs
-```
