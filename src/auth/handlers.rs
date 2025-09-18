@@ -1,19 +1,43 @@
 use std::sync::Arc;
 
 use axum::{
-    Extension, Json,
+    Extension, Json, Router,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
+    routing::{get, patch, post, put},
 };
 use sqlx::{Pool, Postgres};
 use tracing::info;
 
 use crate::{
-    auth::{Auth0User, Permission, PermissionCtx, PutUserRequest, Subject, db},
-    error::ServerError,
-    state::AppState,
+    auth::{
+        auth_models::{Permission, PermissionCtx},
+        db,
+        user_models::{Auth0User, PutUserRequest, Subject},
+    },
+    common::{app_state::AppState, server_error::ServerError},
 };
+
+pub fn public_auth_routes(state: Arc<AppState>) -> Router {
+    Router::new()
+        .route("/", post(create_guest_user))
+        .with_state(state)
+}
+
+pub fn protected_auth_routes(state: Arc<AppState>) -> Router {
+    Router::new()
+        .route("/", get(get_user_from_subject))
+        .route(
+            "/{user_id}",
+            patch(patch_user)
+                .delete(delete_user)
+                .post(auth0_trigger_endpoint),
+        )
+        .route("/list", get(list_all_users))
+        .route("/activity/{user_id}", put(patch_user_activity))
+        .with_state(state)
+}
 
 pub async fn get_user_from_subject(
     State(state): State<Arc<AppState>>,

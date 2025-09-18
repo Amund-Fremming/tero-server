@@ -1,12 +1,9 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::hash::Hash;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{
-    quiz::{Quiz, QuizSession},
-    spin::{Spin, SpinSession},
-};
+use crate::{quiz::models::Quiz, spin::models::Spin};
 
 #[derive(Debug, Serialize, Deserialize, Hash, Clone, sqlx::Type)]
 #[sqlx(type_name = "game_category", rename_all = "lowercase")]

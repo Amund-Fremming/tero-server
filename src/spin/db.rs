@@ -2,9 +2,8 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    common::PagedRequest,
-    error::ServerError,
-    spin::{Round, Spin, SpinSession},
+    common::{models::PagedRequest, server_error::ServerError},
+    spin::models::{Round, Spin, SpinSession},
 };
 
 pub async fn get_spin_session_by_id(

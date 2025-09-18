@@ -2,9 +2,8 @@ use sqlx::{Pool, Postgres, query_as};
 use uuid::Uuid;
 
 use crate::{
-    common::PagedRequest,
-    error::ServerError,
-    quiz::{Question, Quiz, QuizSession},
+    common::{models::PagedRequest, server_error::ServerError},
+    quiz::models::{Question, Quiz, QuizSession},
 };
 
 pub async fn get_quiz_session_by_id(

@@ -3,8 +3,8 @@ use sqlx::{Pool, Postgres, Row, query, query_as};
 use uuid::Uuid;
 
 use crate::{
-    auth::{Auth0User, PutUserRequest, User, UserType},
-    error::ServerError,
+    auth::user_models::{Auth0User, PutUserRequest, User, UserType},
+    common::server_error::ServerError,
 };
 
 pub async fn get_user_by_id(

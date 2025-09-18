@@ -10,22 +10,18 @@ use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::FmtSubscriber;
 
 use crate::{
-    auth::{protected_auth_routes, public_auth_routes},
-    common::common_routes,
+    auth::handlers::{protected_auth_routes, public_auth_routes},
+    common::{app_state::AppState, handlers::common_routes},
     health::health_routes,
-    mw::{auth_mw, request_mw},
-    state::AppState,
+    mw::{auth_mw::auth_mw, request_mw::request_mw},
 };
 
 mod auth;
 mod common;
-mod error;
 mod health;
 mod mw;
 mod quiz;
 mod spin;
-mod state;
-mod ws;
 
 static AUTH0_WEBHOOK_KEY: Lazy<String> = Lazy::new(|| {
     env::var("AUTH0_WEBHOOK_KEY").expect("AUTH0_WEBHOOK_KEY is missing as env variable")

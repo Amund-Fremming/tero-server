@@ -6,7 +6,9 @@ use serde::Deserialize;
 use sqlx::{Pool, Postgres};
 use tracing::info;
 
-use crate::{AUTH0_DOMAIN, error::ServerError, quiz::Quiz, spin::Spin};
+use crate::{
+    AUTH0_DOMAIN, common::server_error::ServerError, quiz::models::Quiz, spin::models::Spin,
+};
 
 #[derive(Debug)]
 pub struct AppState {
@@ -14,7 +16,6 @@ pub struct AppState {
     jwks: Jwks,
     quiz_cache: GustCache<Vec<Quiz>>,
     spin_cache: GustCache<Vec<Spin>>,
-    //TODO ADD CACHE FOR SESSIONS
 }
 
 #[derive(Debug, Deserialize, Clone)]

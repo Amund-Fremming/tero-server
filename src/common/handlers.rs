@@ -1,21 +1,37 @@
 use std::sync::Arc;
 
 use axum::{
-    Json,
+    Json, Router,
     extract::{Path, State},
     response::{IntoResponse, Response},
+    routing::{get, post},
 };
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    common::{GameType, PagedRequest, PagedResponse},
-    error::ServerError,
-    quiz::{QuizSession, get_quiz_page, get_quiz_session_by_id},
-    spin::{SpinSession, get_spin_page, get_spin_session_by_id},
-    state::AppState,
+    common::{
+        app_state::AppState,
+        models::{GameType, PagedRequest, PagedResponse},
+        server_error::ServerError,
+    },
+    quiz::{
+        db::{get_quiz_page, get_quiz_session_by_id},
+        models::QuizSession,
+    },
+    spin::{
+        db::{get_spin_page, get_spin_session_by_id},
+        models::SpinSession,
+    },
 };
+
+pub fn common_routes(state: Arc<AppState>) -> Router {
+    Router::new()
+        .route("/search/{game_type}", post(typed_search))
+        .route("/get/{game_type}/{game_id}", get(get_game_session_by_id))
+        .with_state(state)
+}
 
 //#[serde(untagged)]
 #[derive(Debug, Serialize, Deserialize)]

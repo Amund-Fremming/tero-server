@@ -2,7 +2,7 @@ use axum::{http::StatusCode, response::IntoResponse};
 use thiserror::Error;
 use tracing::error;
 
-use crate::auth::Permission;
+use crate::auth::auth_models::Permission;
 
 #[derive(Debug, Error)]
 pub enum ServerError {

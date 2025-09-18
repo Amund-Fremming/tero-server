@@ -4,7 +4,7 @@ use axum::{
     routing::get,
 };
 
-use crate::error::ServerError;
+use crate::common::server_error::ServerError;
 
 pub fn health_routes() -> Router {
     Router::new()

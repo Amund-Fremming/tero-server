@@ -2,7 +2,7 @@ use rand::{rng, seq::SliceRandom};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::common::GameCategory;
+use crate::common::models::GameCategory;
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct Quiz {
