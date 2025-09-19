@@ -36,7 +36,7 @@ pub async fn get_spin_session_by_id(
     .fetch_all(pool)
     .await?;
 
-    let session = SpinSession::from_db(spinner, rounds);
+    let session = SpinSession::from_game_and_rounds(spinner, rounds);
 
     Ok(session)
 }

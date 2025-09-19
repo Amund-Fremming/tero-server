@@ -36,7 +36,7 @@ pub async fn get_quiz_session_by_id(
     .fetch_all(pool)
     .await?;
 
-    let session = QuizSession::from_db(quiz, questions);
+    let session = QuizSession::from_game_and_questions(quiz, questions);
     Ok(session)
 }
 

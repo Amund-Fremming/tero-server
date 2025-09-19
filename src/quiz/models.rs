@@ -1,4 +1,3 @@
-use rand::{rng, seq::SliceRandom};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -39,34 +38,8 @@ pub struct QuizSession {
     questions: Vec<String>,
 }
 
-// Only used for a new game, when stored to the db
-impl Into<Quiz> for QuizSession {
-    fn into(self) -> Quiz {
-        Quiz {
-            id: Uuid::new_v4(),
-            name: self.name,
-            description: self.description,
-            category: self.category,
-            iterations: self.iterations.into(),
-            times_played: 0,
-        }
-    }
-}
-
 impl QuizSession {
-    pub fn from_request(req: CreateQuizRequest) -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            name: req.name,
-            description: req.description,
-            category: req.category.unwrap_or(GameCategory::Casual),
-            iterations: 0,
-            current_iteration: 0,
-            questions: Vec::new(),
-        }
-    }
-
-    pub fn from_db(quiz: Quiz, mut questions: Vec<Question>) -> Self {
+    pub fn from_game_and_questions(quiz: Quiz, mut questions: Vec<Question>) -> Self {
         Self {
             id: quiz.id,
             name: quiz.name,
@@ -76,18 +49,5 @@ impl QuizSession {
             current_iteration: 0,
             questions: questions.iter_mut().map(|q| q.title.clone()).collect(),
         }
-    }
-
-    pub fn inc_iteration(&mut self) {
-        self.current_iteration = self.current_iteration + 1;
-    }
-
-    pub fn add_question(&mut self, title: String) {
-        self.questions.push(title);
-    }
-
-    pub fn shuffle(&mut self) {
-        let mut rng = rng();
-        self.questions.shuffle(&mut rng);
     }
 }

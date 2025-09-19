@@ -14,6 +14,7 @@ use crate::{
 pub struct AppState {
     pool: Pool<Postgres>,
     jwks: Jwks,
+    client: Client,
     quiz_cache: GustCache<Vec<Quiz>>,
     spin_cache: GustCache<Vec<Spin>>,
 }
@@ -39,8 +40,9 @@ impl AppState {
     pub async fn from_connection_string(s: &str) -> Result<Arc<Self>, ServerError> {
         let pool = Pool::<Postgres>::connect(&s).await?;
 
+        let client = Client::new();
         let url = format!("{}.well-known/jwks.json", *AUTH0_DOMAIN);
-        let response = Client::new().get(url).send().await?;
+        let response = client.get(url).send().await?;
         info!("JWKs Response: {}", response.status());
         let jwks = response.json::<Jwks>().await?;
         let quiz_cache = GustCache::from_ttl(chrono::Duration::minutes(2));
@@ -49,6 +51,7 @@ impl AppState {
         let state = Arc::new(Self {
             pool,
             jwks,
+            client,
             quiz_cache,
             spin_cache,
         });
@@ -70,5 +73,9 @@ impl AppState {
 
     pub fn get_spin_cache(&self) -> &GustCache<Vec<Spin>> {
         &self.spin_cache
+    }
+
+    pub fn get_client(&self) -> &Client {
+        &self.client
     }
 }

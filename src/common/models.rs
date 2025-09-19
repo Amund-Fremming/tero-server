@@ -20,6 +20,8 @@ pub enum GameCategory {
     Ladies,
     #[serde(rename(deserialize = "boys"))]
     Boys,
+    #[serde(rename(deserialize = "default"))]
+    Default,
 }
 
 impl GameCategory {
@@ -31,6 +33,7 @@ impl GameCategory {
             GameCategory::Dangerous => "dangerous",
             GameCategory::Ladies => "ladies",
             GameCategory::Boys => "boys",
+            GameCategory::Default => "default",
         }
     }
 }

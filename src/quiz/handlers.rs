@@ -9,16 +9,14 @@ use axum::{
 
 use crate::common::{app_state::AppState, server_error::ServerError};
 
-pub fn spingame_routes(state: Arc<AppState>) -> Router {
+pub fn quizgame_routes(state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/", get(initiate_game).post(create_game))
-        .route("/persist", post(persist_gamesession))
+        .route("/", get(play_game).post(create_game))
+        .route("/store", post(persist_gamesession))
         .with_state(state.clone())
 }
 
-async fn initiate_game(
-    State(state): State<Arc<AppState>>,
-) -> Result<impl IntoResponse, ServerError> {
+async fn play_game(State(state): State<Arc<AppState>>) -> Result<impl IntoResponse, ServerError> {
     todo!();
     Ok(())
 }
