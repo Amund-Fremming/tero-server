@@ -7,6 +7,8 @@
 - [Architecture](#architecture)
 - [Prerequisites for running it locally](#prerequisites-for-running-it-locally)
 
+<br/>
+
 ---
 
 <br/>
