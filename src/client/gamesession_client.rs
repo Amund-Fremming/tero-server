@@ -41,6 +41,7 @@ pub enum GameSessionClientError {
     Serialize(#[from] serde_json::Error),
 }
 
+#[derive(Debug)]
 pub struct GameSessionClient {
     domain: String,
 }
@@ -50,6 +51,20 @@ impl GameSessionClient {
         let domain = domain.into();
 
         Self { domain }
+    }
+
+    pub async fn health_check(&self, client: &Client) -> Result<(), GameSessionClientError> {
+        let response = client.get(format!("{}/health", self.domain)).send().await?;
+        if !response.status().is_success() {
+            error!("Failed heath check on session microservice");
+            return Err(GameSessionClientError::ApiError(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Failed to reach session microservice".into(),
+            ));
+        }
+        info!("GameSession microservice is healthy");
+
+        Ok(())
     }
 
     // This needs to send a actual gamesession object
@@ -65,7 +80,7 @@ impl GameSessionClient {
             "user_id": user_id
         });
 
-        let uri = format!("{}/create", game_type.to_string());
+        let uri = format!("{}/session/create", game_type.to_string());
         let payload = serde_json::to_value(&json)?;
         let request = GameSessionRequest { game_type, payload };
         self.send_json(client, &uri, request).await?;
@@ -83,7 +98,7 @@ impl GameSessionClient {
         client: &Client,
     ) -> Result<(), GameSessionClientError> {
         let payload = serde_json::to_value(&gamesession)?;
-        let uri = format!("{}/initiate", game_type.to_string());
+        let uri = format!("{}/session/initiate", game_type.to_string());
         let request = GameSessionRequest { game_type, payload };
         self.send_json(client, &uri, request).await?;
         Ok(())

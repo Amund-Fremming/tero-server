@@ -35,6 +35,9 @@ pub enum ServerError {
 
     #[error("Json error: {0}")]
     Json(#[from] serde_json::Error),
+
+    #[error("Missing env var: {0}")]
+    MissingEnv(String),
 }
 
 impl IntoResponse for ServerError {
@@ -84,6 +87,10 @@ impl IntoResponse for ServerError {
             }
             ServerError::Cache(e) => {
                 error!("Gust Cache error: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, String::new())
+            }
+            ServerError::MissingEnv(e) => {
+                error!("Missing env var: {}", e);
                 (StatusCode::INTERNAL_SERVER_ERROR, String::new())
             }
         }
