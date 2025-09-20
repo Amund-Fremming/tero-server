@@ -4,9 +4,8 @@ use uuid::Uuid;
 use crate::common::models::GameCategory;
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
-pub struct Spin {
+pub struct SpinGame {
     pub id: Uuid,
-    pub host_id: i32,
     pub name: String,
     pub description: Option<String>,
     pub category: GameCategory,
@@ -14,7 +13,7 @@ pub struct Spin {
     pub times_played: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct Round {
     id: Uuid,
     spinner_id: i32,
@@ -25,14 +24,44 @@ pub struct Round {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SpinSession {
+    pub id: Uuid,
+    pub host_id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub category: GameCategory,
+    pub iterations: i32,
+    pub times_played: i32,
+
     // metadata
     // players
-    // rounds
+    pub rounds: Vec<Round>,
 }
 
 impl SpinSession {
-    pub fn from_game_and_rounds(spinner: Spin, rounds: Vec<Round>) -> Self {
-        todo!();
-        Self {}
+    pub fn from_game_and_rounds(host_id: Uuid, game: SpinGame, rounds: Vec<Round>) -> Self {
+        Self {
+            id: game.id,
+            host_id,
+            name: game.name,
+            description: game.description,
+            category: game.category,
+            iterations: game.iterations,
+            times_played: game.times_played,
+            rounds,
+        }
+    }
+
+    pub fn to_game_and_rounds(&self) -> (SpinGame, Vec<Round>) {
+        let rounds = self.rounds.iter().map(|r| r.clone()).collect();
+        let game = SpinGame {
+            id: self.id,
+            name: self.name.to_string(),
+            description: self.description.clone(),
+            category: self.category.clone(),
+            iterations: self.iterations,
+            times_played: self.times_played,
+        };
+
+        (game, rounds)
     }
 }

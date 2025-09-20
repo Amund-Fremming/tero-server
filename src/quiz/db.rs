@@ -1,4 +1,4 @@
-use sqlx::{Pool, Postgres, query_as};
+use sqlx::{Pool, Postgres, Transaction, query_as};
 use uuid::Uuid;
 
 use crate::{
@@ -64,4 +64,12 @@ pub async fn get_quiz_page(
     let games = sqlx::query_as::<_, Quiz>(&sql).fetch_all(pool).await?;
 
     Ok(games)
+}
+
+pub async fn tx_persist_quizsession(
+    tx: &mut Transaction<'_, Postgres>,
+    session: &QuizSession,
+) -> Result<(), sqlx::Error> {
+    todo!();
+    Ok(())
 }

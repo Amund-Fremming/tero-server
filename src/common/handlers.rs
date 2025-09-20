@@ -4,44 +4,54 @@ use axum::{
     Json, Router,
     extract::{Path, State},
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::post,
 };
 use reqwest::StatusCode;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::{
     common::{
         app_state::AppState,
-        models::{GameType, PagedRequest, PagedResponse},
+        models::{GameSessionRequest, GameType, PagedRequest, PagedResponse},
         server_error::ServerError,
     },
     quiz::{
-        db::{get_quiz_page, get_quiz_session_by_id},
+        db::{get_quiz_page, tx_persist_quizsession},
         models::QuizSession,
     },
     spin::{
-        db::{get_spin_page, get_spin_session_by_id},
+        db::{get_spin_page, tx_persist_spinsession},
         models::SpinSession,
     },
 };
 
 pub fn common_routes(state: Arc<AppState>) -> Router {
     Router::new()
+        .route("/session/persist", post(persist_gamesession))
         .route("/search/{game_type}", post(typed_search))
-        .route("/get/{game_type}/{game_id}", get(get_game_session_by_id))
         .with_state(state)
 }
 
-//#[serde(untagged)]
-#[derive(Debug, Serialize, Deserialize)]
-pub enum GameApiWrapper {
-    Quiz(QuizSession),
-    Spinner(SpinSession),
+async fn persist_gamesession(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<GameSessionRequest>,
+) -> Result<impl IntoResponse, ServerError> {
+    let mut tx = state.get_pool().begin().await?;
+
+    match request.game_type {
+        GameType::Spin => {
+            let gamesession: SpinSession = serde_json::from_value(request.payload)?;
+            tx_persist_spinsession(&mut tx, &gamesession).await?;
+        }
+        GameType::Quiz => {
+            let gamesession: QuizSession = serde_json::from_value(request.payload)?;
+            tx_persist_quizsession(&mut tx, &gamesession).await?;
+        }
+    }
+
+    Ok(())
 }
 
-#[axum::debug_handler]
-pub async fn typed_search(
+async fn typed_search(
     State(state): State<Arc<AppState>>,
     Path(game_type): Path<GameType>,
     Json(request): Json<PagedRequest>,
@@ -55,7 +65,7 @@ pub async fn typed_search(
 
             PagedResponse::from_quizzes(quizzes)
         }
-        GameType::Spinner => {
+        GameType::Spin => {
             let spinners = state
                 .get_spin_cache()
                 .get(&request, || get_spin_page(state.get_pool(), &request))
@@ -66,22 +76,4 @@ pub async fn typed_search(
     };
 
     Ok((StatusCode::OK, Json(response)).into_response())
-}
-
-pub async fn get_game_session_by_id(
-    State(state): State<Arc<AppState>>,
-    Path((game_type, game_id)): Path<(GameType, Uuid)>,
-) -> Result<impl IntoResponse, ServerError> {
-    let wrapper = match game_type {
-        GameType::Quiz => {
-            let game = get_quiz_session_by_id(state.get_pool(), &game_id).await?;
-            GameApiWrapper::Quiz(game)
-        }
-        GameType::Spinner => {
-            let game = get_spin_session_by_id(state.get_pool(), &game_id).await?;
-            GameApiWrapper::Spinner(game)
-        }
-    };
-
-    Ok((StatusCode::OK, Json(wrapper)))
 }

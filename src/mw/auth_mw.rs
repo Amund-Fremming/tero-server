@@ -65,8 +65,7 @@ async fn get_subject_and_permissions(
 ) -> Result<(Subject, PermissionCtx), ServerError> {
     if let Some(token) = header_value.strip_prefix("Bearer ") {
         let token_data = verify_jwt(token, jwks).await?;
-        let claims: Claims = serde_json::from_value(token_data.claims)
-            .map_err(|e| ServerError::Json(format!("Deserialization error: {:?}", e)))?;
+        let claims: Claims = serde_json::from_value(token_data.claims)?;
 
         let subject = Subject::Registered(claims.sub);
         let permissions = PermissionCtx::new(claims.permissions);

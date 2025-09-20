@@ -1,9 +1,10 @@
+use core::fmt;
 use std::hash::Hash;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{quiz::models::Quiz, spin::models::Spin};
+use crate::{quiz::models::Quiz, spin::models::SpinGame};
 
 #[derive(Debug, Serialize, Deserialize, Hash, Clone, sqlx::Type)]
 #[sqlx(type_name = "game_category", rename_all = "lowercase")]
@@ -41,7 +42,16 @@ impl GameCategory {
 #[derive(Debug, Serialize, Deserialize, Hash)]
 pub enum GameType {
     Quiz,
-    Spinner,
+    Spin,
+}
+
+impl fmt::Display for GameType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GameType::Quiz => write!(f, "quiz"),
+            GameType::Spin => write!(f, "spin"),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Hash)]
@@ -71,8 +81,8 @@ impl From<Quiz> for GameBase {
     }
 }
 
-impl From<Spin> for GameBase {
-    fn from(value: Spin) -> Self {
+impl From<SpinGame> for GameBase {
+    fn from(value: SpinGame) -> Self {
         Self {
             id: value.id,
             name: value.name,
@@ -95,9 +105,15 @@ impl PagedResponse {
         }
     }
 
-    pub fn from_spinners(spinners: Vec<Spin>) -> Self {
+    pub fn from_spinners(spinners: Vec<SpinGame>) -> Self {
         Self {
             games: spinners.into_iter().map(|s| s.into()).collect(),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GameSessionRequest {
+    pub game_type: GameType,
+    pub payload: serde_json::Value,
 }

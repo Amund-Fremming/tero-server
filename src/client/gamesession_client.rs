@@ -1,6 +1,27 @@
-use core::fmt;
+use reqwest::{Client, StatusCode};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use tracing::{error, info};
+use uuid::Uuid;
 
-use reqwest::Client;
+use crate::{
+    common::models::{GameSessionRequest, GameType},
+    quiz::models::QuizSession,
+    spin::models::SpinSession,
+};
+
+//#[serde(untagged)]
+#[derive(Debug, Serialize, Deserialize)]
+pub enum GameApiWrapper {
+    Quiz(QuizSession),
+    Spin(SpinSession),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InitiateSessionResponse {
+    game_id: Uuid,
+    hub_address: String,
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum GameSessionClientError {
@@ -12,20 +33,12 @@ pub enum GameSessionClientError {
 
     #[error("Http request failed: {0}")]
     Http(#[from] reqwest::Error),
-}
 
-pub enum Hub {
-    Quiz,
-    Spin,
-}
+    #[error("Api error: {0} - {1}")]
+    ApiError(StatusCode, String),
 
-impl fmt::Display for Hub {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Hub::Quiz => write!(f, "quiz"),
-            Hub::Spin => write!(f, "spin"),
-        }
-    }
+    #[error("Failed to serialize object: {0}")]
+    Serialize(#[from] serde_json::Error),
 }
 
 pub struct GameSessionClient {
@@ -39,11 +52,64 @@ impl GameSessionClient {
         Self { domain }
     }
 
-    async fn initiate_game(&self, client: &Client) -> Result<(), GameSessionClientError> {
-        //
+    // This needs to send a actual gamesession object
+    pub async fn create_gamesession(
+        &self,
+        client: &Client,
+        game_type: GameType,
+        user_id: Uuid,
+    ) -> Result<InitiateSessionResponse, GameSessionClientError> {
+        let game_id = Uuid::new_v4();
+        let json = json!({
+            "game_id": game_id,
+            "user_id": user_id
+        });
+
+        let uri = format!("{}/create", game_type.to_string());
+        let payload = serde_json::to_value(&json)?;
+        let request = GameSessionRequest { game_type, payload };
+        self.send_json(client, &uri, request).await?;
+
+        Ok(InitiateSessionResponse {
+            game_id,
+            hub_address: format!("{}/{}", self.domain, uri),
+        })
     }
 
-    async fn create_game(&self, client: &Client) -> Result<(), GameSessionClientError> {
-        //
+    pub async fn initiate_gamesession<T: Serialize>(
+        &self,
+        game_type: GameType,
+        gamesession: T,
+        client: &Client,
+    ) -> Result<(), GameSessionClientError> {
+        let payload = serde_json::to_value(&gamesession)?;
+        let uri = format!("{}/initiate", game_type.to_string());
+        let request = GameSessionRequest { game_type, payload };
+        self.send_json(client, &uri, request).await?;
+        Ok(())
+    }
+
+    async fn send_json<T: Serialize>(
+        &self,
+        client: &Client,
+        uri: &str,
+        body: T,
+    ) -> Result<(), GameSessionClientError> {
+        info!("GameSessionClient sending request to: {}", uri);
+        let response = client
+            .post(format!("{}/{}", self.domain, uri))
+            .header("content-type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
+
+        let status = response.status();
+        let body = response.text().await.unwrap_or("No body".into());
+        if !status.is_success() {
+            error!("GameSessionClient request failed: {} - {}", status, body);
+            return Err(GameSessionClientError::ApiError(status, body));
+        }
+
+        Ok(())
     }
 }

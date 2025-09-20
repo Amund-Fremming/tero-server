@@ -25,10 +25,3 @@ async fn create_game(State(state): State<Arc<AppState>>) -> Result<impl IntoResp
     todo!();
     Ok(())
 }
-
-async fn persist_gamesession(
-    State(state): State<Arc<AppState>>,
-) -> Result<impl IntoResponse, ServerError> {
-    todo!();
-    Ok(())
-}

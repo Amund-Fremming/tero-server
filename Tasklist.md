@@ -1,8 +1,8 @@
 # Tasklist
 
-## Left off
+## Quick notes
 
-- Take use of the cache
+- Persist gamesession needs to be protected. Make singalR hub a integration, validate M2M Token
 
 ## Thoughts
 

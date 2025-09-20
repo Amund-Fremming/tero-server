@@ -7,7 +7,7 @@ use sqlx::{Pool, Postgres};
 use tracing::info;
 
 use crate::{
-    AUTH0_DOMAIN, common::server_error::ServerError, quiz::models::Quiz, spin::models::Spin,
+    AUTH0_DOMAIN, common::server_error::ServerError, quiz::models::Quiz, spin::models::SpinGame,
 };
 
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub struct AppState {
     jwks: Jwks,
     client: Client,
     quiz_cache: GustCache<Vec<Quiz>>,
-    spin_cache: GustCache<Vec<Spin>>,
+    spin_cache: GustCache<Vec<SpinGame>>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -71,7 +71,7 @@ impl AppState {
         &self.quiz_cache
     }
 
-    pub fn get_spin_cache(&self) -> &GustCache<Vec<Spin>> {
+    pub fn get_spin_cache(&self) -> &GustCache<Vec<SpinGame>> {
         &self.spin_cache
     }
 

@@ -1,28 +1,29 @@
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::{
     common::{models::PagedRequest, server_error::ServerError},
-    spin::models::{Round, Spin, SpinSession},
+    spin::models::{Round, SpinGame, SpinSession},
 };
 
 pub async fn get_spin_session_by_id(
     pool: &Pool<Postgres>,
-    spinner_id: &Uuid,
+    host_id: Uuid,
+    game_id: &Uuid,
 ) -> Result<SpinSession, ServerError> {
-    let spinner = sqlx::query_as::<_, Spin>(
+    let game = sqlx::query_as::<_, SpinGame>(
         r#"
         SELECT id, host_id, name, description, category, iterations, times_played
         FROM spinner
         WHERE id = $1
         "#,
     )
-    .bind(spinner_id)
+    .bind(game_id)
     .fetch_optional(pool)
     .await?
     .ok_or(ServerError::NotFound(format!(
         "Spinner with id {} was not found",
-        spinner_id
+        game_id
     )))?;
 
     let rounds = sqlx::query_as::<_, Round>(
@@ -32,11 +33,11 @@ pub async fn get_spin_session_by_id(
         WHERE spinner_id = $1 
         "#,
     )
-    .bind(spinner_id)
+    .bind(game_id)
     .fetch_all(pool)
     .await?;
 
-    let session = SpinSession::from_game_and_rounds(spinner, rounds);
+    let session = SpinSession::from_game_and_rounds(host_id, game, rounds);
 
     Ok(session)
 }
@@ -44,7 +45,7 @@ pub async fn get_spin_session_by_id(
 pub async fn get_spin_page(
     pool: &Pool<Postgres>,
     req: &PagedRequest,
-) -> Result<Vec<Spin>, ServerError> {
+) -> Result<Vec<SpinGame>, sqlx::Error> {
     let mut sql = String::from(
         r#"
         SELECT id, host_id, name, description, category, iterations, times_played
@@ -62,7 +63,15 @@ pub async fn get_spin_page(
 
     query.push(format!("LIMIT {} OFFSET {}", limit, offset));
     sql.push_str(format!("WHERE {}", query.join(" AND ")).as_str());
-    let spinners = sqlx::query_as::<_, Spin>(&sql).fetch_all(pool).await?;
+    let spinners = sqlx::query_as::<_, SpinGame>(&sql).fetch_all(pool).await?;
 
     Ok(spinners)
+}
+
+pub async fn tx_persist_spinsession(
+    tx: &mut Transaction<'_, Postgres>,
+    session: &SpinSession,
+) -> Result<(), sqlx::Error> {
+    todo!();
+    Ok(())
 }

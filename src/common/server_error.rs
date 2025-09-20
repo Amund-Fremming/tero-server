@@ -30,11 +30,11 @@ pub enum ServerError {
     #[error("JWT verification error: {0}")]
     JwtVerification(String),
 
-    #[error("Json error: {0}")]
-    Json(String),
-
     #[error("Gust Cache error: {0}")]
     Cache(#[from] gustcache::CacheError),
+
+    #[error("Json error: {0}")]
+    Json(#[from] serde_json::Error),
 }
 
 impl IntoResponse for ServerError {
